@@ -2,7 +2,5 @@
   "name": "Apparel Ops Global — Ops Hub",
   "description": "Task board, timeline, meetings, and activity tracker for the Apparel Ops Global course launch team.",
   "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,1142 +1,2187 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Apparel Ops Global — Ops Hub</title>
-<meta name="description" content="Task board, timeline, meetings, and activity tracker for the Apparel Ops Global course launch team.">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-:root {
-  /* Color tokens — factory-floor palette, not SaaS-blue */
-  --ink:        #12181B;   /* near-black charcoal, floor concrete */
-  --ink-soft:   #2A3438;
-  --paper:      #F7F5F0;   /* bone / fabric white */
-  --paper-dim:  #EDE9E0;
-  --paper-card: #FFFFFF;
-  --thread:     #C4622D;   /* burnt thread-orange — signature accent, used sparingly */
-  --thread-dim: #E8D9CD;
-  --spool:      #2D5F4C;   /* spool-green — done / on-track */
-  --spool-dim:  #DCE6E0;
-  --kraft:      #8B7355;   /* kraft-tag brown — borders, muted */
-  --kraft-dim:  #E7E0D3;
-  --alert:      #B0413E;   /* stitched-red — blocked / overdue */
-  --alert-dim:  #F0DBD9;
-  --line:       #DDD6C7;   /* hairline border, unbleached thread */
-  --line-strong:#C7BEA9;
-
-  --font-display: "Archivo Narrow", "Oswald", sans-serif;
-  --font-body:    "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:    "JetBrains Mono", ui-monospace, monospace;
-
-  --radius: 3px;
-  --shadow-card: 0 1px 2px rgba(18,24,27,0.06), 0 1px 0 rgba(18,24,27,0.04);
-  --shadow-pop:  0 8px 24px rgba(18,24,27,0.14), 0 2px 6px rgba(18,24,27,0.08);
-}
-
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  background: var(--paper);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-::selection { background: var(--thread); color: var(--paper); }
-
-/* Reduced motion respected */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
-}
-
-/* Visible keyboard focus everywhere */
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
-textarea:focus-visible, [tabindex]:focus-visible {
-  outline: 2px solid var(--thread);
-  outline-offset: 2px;
-}
-
-h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  margin: 0;
-  color: var(--ink);
-}
-
-p { margin: 0; }
-button { font-family: inherit; cursor: pointer; }
-input, select, textarea { font-family: inherit; }
-
-.mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
-
-/* ================= APP SHELL ================= */
-
-.app-shell {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  min-height: 100vh;
-}
-
-@media (max-width: 900px) {
-  .app-shell { grid-template-columns: 1fr; }
-}
-
-/* ---- Sidebar ---- */
-.sidebar {
-  background: var(--ink);
-  color: var(--paper);
-  padding: 22px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-@media (max-width: 900px) {
-  .sidebar { position: static; height: auto; }
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 4px;
-}
-
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  background: var(--thread);
-  border-radius: var(--radius);
-  display: grid;
-  place-items: center;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 15px;
-  flex-shrink: 0;
-  position: relative;
-}
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border: 1.5px dashed rgba(18,24,27,0.35);
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-.brand-title { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; color: var(--paper); }
-.brand-sub { font-family: var(--font-mono); font-size: 10px; color: var(--kraft); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-
-.nav-group { display: flex; flex-direction: column; gap: 2px; }
-.nav-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(247,245,240,0.4);
-  padding: 6px 10px 4px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border-radius: var(--radius);
-  color: rgba(247,245,240,0.75);
-  background: transparent;
-  border: none;
-  text-align: left;
-  font-size: 13.5px;
-  font-weight: 500;
-  transition: background 0.12s ease, color 0.12s ease;
-  width: 100%;
-}
-.nav-item:hover { background: rgba(247,245,240,0.06); color: var(--paper); }
-.nav-item.active {
-  background: rgba(196,98,45,0.16);
-  color: var(--paper);
-  position: relative;
-}
-.nav-item.active::before {
-  content: "";
-  position: absolute;
-  left: -16px;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  background: var(--thread);
-  border-radius: 0 2px 2px 0;
-}
-.nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.9; }
-.nav-count {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: rgba(247,245,240,0.45);
-  background: rgba(247,245,240,0.08);
-  padding: 1px 6px;
-  border-radius: 8px;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid rgba(247,245,240,0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.data-status {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: rgba(247,245,240,0.5);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 4px;
-}
-.data-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--spool); flex-shrink: 0; }
-
-.footer-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: rgba(247,245,240,0.06);
-  border: 1px solid rgba(247,245,240,0.12);
-  border-radius: var(--radius);
-  color: rgba(247,245,240,0.8);
-  font-size: 12px;
-  font-weight: 500;
-  width: 100%;
-  transition: background 0.12s ease;
-}
-.footer-btn:hover { background: rgba(247,245,240,0.12); color: var(--paper); }
-
-/* ---- Main content ---- */
-.main {
-  padding: 28px 48px 60px;
-  max-width: none;
-  width: 100%;
-}
-
-@media (min-width: 1200px) {
-  .main {
-    padding-left: 64px;
-    padding-right: 64px;
-  }
-}
-
-@media (min-width: 1600px) {
-  .main {
-    padding-left: 80px;
-    padding-right: 80px;
-  }
-}
-
-@media (max-width: 640px) {
-  .main { padding: 18px 16px 40px; }
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.page-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--thread);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.page-title { font-size: 26px; }
-.page-desc { color: var(--kraft); font-size: 13.5px; margin-top: 6px; max-width: 60ch; }
-
-.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* ================= BUTTONS ================= */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 14px;
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid transparent;
-  transition: all 0.12s ease;
-  white-space: nowrap;
-}
-.btn svg { width: 14px; height: 14px; }
-
-.btn-primary { background: var(--thread); color: var(--paper); border-color: var(--thread); }
-.btn-primary:hover { background: #A9531F; border-color: #A9531F; }
-
-.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
-.btn-ghost:hover { background: var(--paper-dim); }
-
-.btn-subtle { background: var(--paper-card); color: var(--ink); border-color: var(--line); }
-.btn-subtle:hover { border-color: var(--line-strong); }
-
-.btn-danger-text { background: transparent; color: var(--alert); border: none; padding: 4px 8px; font-size: 12px; }
-.btn-danger-text:hover { text-decoration: underline; }
-
-.btn-icon {
-  width: 32px; height: 32px; padding: 0;
-  display: grid; place-items: center;
-  background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--radius);
-  color: var(--ink);
-}
-.btn-icon:hover { border-color: var(--line-strong); background: var(--paper-dim); }
-
-/* ================= STAT STRIP ================= */
-
-.stat-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 28px;
-}
-@media (max-width: 720px) { .stat-strip { grid-template-columns: repeat(2, 1fr); } }
-
-.stat-card {
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  position: relative;
-  overflow: hidden;
-}
-.stat-card::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--accent, var(--kraft));
-}
-.stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1; }
-.stat-label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--kraft); margin-top: 6px; }
-
-/* ================= PHASE SECTION ================= */
-
-.phase-block { margin-bottom: 28px; }
-
-.phase-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  user-select: none;
-}
-.phase-tab {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--paper);
-  background: var(--phase-color, var(--kraft));
-  padding: 3px 8px;
-  border-radius: 2px;
-  letter-spacing: 0.03em;
-}
-.phase-title-text { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; }
-.phase-progress-bar {
-  flex: 1;
-  height: 5px;
-  background: var(--paper-dim);
-  border-radius: 3px;
-  overflow: hidden;
-  min-width: 60px;
-  max-width: 160px;
-}
-.phase-progress-fill { height: 100%; background: var(--phase-color, var(--spool)); border-radius: 3px; }
-.phase-count { font-family: var(--font-mono); font-size: 11px; color: var(--kraft); }
-.phase-chevron { width: 14px; height: 14px; color: var(--kraft); transition: transform 0.15s ease; flex-shrink: 0; }
-.phase-chevron.collapsed { transform: rotate(-90deg); }
-
-/* Lighter-weight phase row for dashboard summary (no ticket notch) */
-.phase-summary-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: border-color 0.12s ease;
-}
-.phase-summary-row:hover { border-color: var(--line-strong); }
-.phase-summary-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-.phase-summary-count { font-size: 10.5px; color: var(--kraft); white-space: nowrap; }
-@media (max-width: 480px) { .phase-summary-name { max-width: 100px; } }
-
-.task-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 10px;
-}
-
-/* ================= TASK TICKET CARD ================= */
-
-.ticket {
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 13px 14px 12px;
-  position: relative;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
-  cursor: pointer;
-}
-.ticket:hover { border-color: var(--line-strong); box-shadow: var(--shadow-card); transform: translateY(-1px); }
-
-/* Punch-hole notch motif — work order ticket detail */
-.ticket::before {
-  content: "";
-  position: absolute;
-  left: -5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 50%;
-}
-
-.ticket-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.ticket-id { font-family: var(--font-mono); font-size: 10.5px; color: var(--kraft); font-weight: 600; }
-.ticket-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; margin-bottom: 10px; color: var(--ink); }
-
-.ticket-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.ticket-dates {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--kraft);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.avatar-stack { display: flex; align-items: center; }
-.avatar {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  font-weight: 700;
-  color: var(--paper);
-  border: 1.5px solid var(--paper-card);
-  margin-left: -6px;
-  flex-shrink: 0;
-}
-.avatar:first-child { margin-left: 0; }
-.avatar-lg { width: 30px; height: 30px; font-size: 10.5px; }
-
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 3px 7px;
-  border-radius: 2px;
-}
-.status-chip .dot { width: 5px; height: 5px; border-radius: 50%; }
-
-.status-done       { background: var(--spool-dim); color: var(--spool); }
-.status-done .dot        { background: var(--spool); }
-.status-ongoing     { background: var(--thread-dim); color: var(--thread); }
-.status-ongoing .dot     { background: var(--thread); }
-.status-notstarted  { background: var(--kraft-dim); color: var(--kraft); }
-.status-notstarted .dot  { background: var(--kraft); }
-.status-blocked     { background: var(--alert-dim); color: var(--alert); }
-.status-blocked .dot     { background: var(--alert); }
-.status-open        { background: var(--thread-dim); color: var(--thread); }
-.status-open .dot        { background: var(--thread); }
-.status-continuous  { background: #DDE4EC; color: #3E5C76; }
-.status-continuous .dot  { background: #3E5C76; }
-.status-inprogress  { background: var(--thread-dim); color: var(--thread); }
-.status-inprogress .dot  { background: var(--thread); }
-.status-completed   { background: var(--spool-dim); color: var(--spool); }
-.status-completed .dot   { background: var(--spool); }
-
-.ticket-tearline {
-  position: absolute;
-  bottom: -1px; left: 10px; right: 10px;
-  height: 1px;
-  background-image: linear-gradient(to right, var(--line) 50%, transparent 50%);
-  background-size: 6px 1px;
-}
-
-/* ================= VIEW SWITCH / FILTER BAR ================= */
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
-}
-
-.view-switch {
-  display: flex;
-  background: var(--paper-dim);
-  border-radius: var(--radius);
-  padding: 3px;
-  gap: 2px;
-}
-.view-switch-btn {
-  padding: 6px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kraft);
-  background: transparent;
-  border: none;
-  border-radius: 2px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.view-switch-btn.active { background: var(--paper-card); color: var(--ink); box-shadow: var(--shadow-card); }
-.view-switch-btn svg { width: 13px; height: 13px; }
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 7px 10px;
-  min-width: 200px;
-  flex: 1;
-  max-width: 280px;
-}
-.search-box svg { width: 14px; height: 14px; color: var(--kraft); flex-shrink: 0; }
-.search-box input { border: none; background: transparent; outline: none; font-size: 13px; width: 100%; color: var(--ink); }
-.search-box input::placeholder { color: var(--line-strong); }
-
-.filter-select {
-  padding: 7px 26px 7px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--paper-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B7355' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center;
-  appearance: none;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--ink);
-}
-
-.spacer { flex: 1; }
-
-/* ================= GANTT ================= */
-
-.gantt-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper-card); }
-.gantt { min-width: 960px; }
-.gantt-row {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  border-bottom: 1px solid var(--line);
-  align-items: stretch;
-}
-.gantt-row:last-child { border-bottom: none; }
-.gantt-row.head { background: var(--ink); color: var(--paper); }
-.gantt-label {
-  padding: 9px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  border-right: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.gantt-row.head .gantt-label { border-right-color: rgba(247,245,240,0.15); font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
-.gantt-phase-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--dot-color, var(--kraft)); }
-
-.gantt-track { position: relative; padding: 7px 12px; min-height: 36px; display: flex; align-items: center; }
-.gantt-row.head .gantt-track { display: flex; padding: 9px 0; }
-.gantt-week-label {
-  flex: 1;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(247,245,240,0.6);
-  border-left: 1px solid rgba(247,245,240,0.1);
-}
-.gantt-week-label:first-child { border-left: none; }
-
-.gantt-bar-bg {
-  position: absolute;
-  inset: 0 12px;
-  display: flex;
-}
-.gantt-week-col { flex: 1; border-left: 1px solid var(--paper-dim); }
-.gantt-week-col:first-child { border-left: none; }
-
-.gantt-bar {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 20px;
-  border-radius: 3px;
-  background: var(--bar-color, var(--kraft));
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  overflow: hidden;
-}
-.gantt-bar-label { font-family: var(--font-mono); font-size: 9.5px; color: var(--paper); font-weight: 600; white-space: nowrap; }
-.gantt-bar.thread-texture {
-  background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.14) 0, rgba(255,255,255,0.14) 2px, transparent 2px, transparent 6px);
-}
-
-/* ================= MEETINGS ================= */
-
-.meeting-card {
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--thread);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  transition: box-shadow 0.12s ease;
-}
-.meeting-card:hover { box-shadow: var(--shadow-card); }
-.meeting-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.meeting-date { font-family: var(--font-mono); font-size: 11px; color: var(--kraft); margin-bottom: 3px; }
-.meeting-agenda { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
-.meeting-body { font-size: 13px; color: var(--ink-soft); margin: 8px 0; line-height: 1.5; }
-.meeting-action {
-  background: var(--paper-dim);
-  border-radius: 2px;
-  padding: 8px 10px;
-  font-size: 12.5px;
-  margin: 8px 0;
-  border-left: 2px solid var(--kraft);
-}
-.meeting-action-label { font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--kraft); margin-bottom: 3px; }
-.meeting-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-.meeting-people { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--kraft); }
-
-/* ================= ACTIVITY LOG ================= */
-
-.log-table-wrap { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--paper-card); }
-.log-table { width: 100%; border-collapse: collapse; }
-.log-table th {
-  text-align: left;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--paper);
-  background: var(--ink);
-  padding: 10px 12px;
-  font-weight: 600;
-}
-.log-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.log-table tr:last-child td { border-bottom: none; }
-.log-table tr:hover td { background: var(--paper-dim); }
-.log-member-cell { display: flex; align-items: center; gap: 8px; }
-.log-hours { font-family: var(--font-mono); font-weight: 600; }
-
-/* Daily log timeline (alternative view) */
-.day-group { margin-bottom: 22px; }
-.day-group-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--line-strong);
-}
-.day-group-date { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
-.day-group-stats { font-family: var(--font-mono); font-size: 11px; color: var(--kraft); }
-
-.log-entry {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--line);
-}
-.log-entry:last-child { border-bottom: none; }
-.log-entry-body { flex: 1; }
-.log-entry-top { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap; }
-.log-entry-name { font-weight: 600; font-size: 13px; }
-.log-entry-task { font-size: 13px; color: var(--ink-soft); }
-.log-entry-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--kraft); margin-top: 3px; }
-
-/* ================= TEAM PAGE ================= */
-
-.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-.team-card {
-  background: var(--paper-card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 18px;
-  text-align: center;
-}
-.team-card .avatar-lg { width: 52px; height: 52px; font-size: 17px; margin: 0 auto 10px; }
-.team-card-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-bottom: 3px; }
-.team-card-role { font-family: var(--font-mono); font-size: 10.5px; color: var(--kraft); text-transform: uppercase; letter-spacing: 0.05em; }
-.team-card-stats { display: flex; justify-content: center; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
-.team-stat-val { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
-.team-stat-label { font-family: var(--font-mono); font-size: 9.5px; color: var(--kraft); text-transform: uppercase; margin-top: 2px; }
-
-/* ================= EMPTY STATES ================= */
-
-.empty-state {
-  text-align: center;
-  padding: 50px 20px;
-  border: 1.5px dashed var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--paper-card);
-}
-.empty-state svg { width: 36px; height: 36px; color: var(--line-strong); margin-bottom: 12px; }
-.empty-state-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-.empty-state-desc { font-size: 13px; color: var(--kraft); max-width: 36ch; margin: 0 auto 16px; }
-
-/* ================= MODAL ================= */
-
-.modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(18,24,27,0.5);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 40px 16px;
-  z-index: 100;
-  overflow-y: auto;
-  animation: fadeIn 0.15s ease;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.modal {
-  background: var(--paper-card);
-  border-radius: 5px;
-  width: 100%;
-  max-width: 560px;
-  box-shadow: var(--shadow-pop);
-  animation: modalPop 0.16s ease;
-  margin-bottom: 40px;
-}
-@keyframes modalPop { from { opacity: 0; transform: translateY(6px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-.modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--line);
-}
-.modal-title { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
-.modal-close { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--kraft); border: none; background: transparent; }
-.modal-close:hover { background: var(--paper-dim); color: var(--ink); }
-.modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
-.modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 22px; border-top: 1px solid var(--line); }
-
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field-label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--kraft); font-weight: 600; }
-.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field input[type=text], .field input[type=date], .field input[type=number], .field select, .field textarea {
-  padding: 9px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  font-size: 13.5px;
-  color: var(--ink);
-  background: var(--paper-card);
-  outline: none;
-}
-.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--thread); }
-.field textarea { resize: vertical; min-height: 60px; font-family: inherit; }
-
-.chip-select { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip-option {
-  padding: 6px 11px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--kraft);
-  background: var(--paper-card);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.chip-option.selected { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.chip-option .avatar { width: 16px; height: 16px; font-size: 7px; margin: 0; border: none; }
-
-/* ================= DETAIL DRAWER ================= */
-
-.detail-section { margin-bottom: 16px; }
-.detail-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--kraft); margin-bottom: 6px; }
-.detail-value { font-size: 14px; }
-.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* ================= TOAST ================= */
-
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--ink);
-  color: var(--paper);
-  padding: 11px 18px;
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: var(--shadow-pop);
-  z-index: 200;
-  animation: toastIn 0.2s ease;
-}
-.toast .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--spool); }
-@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
-
-/* ================= MOBILE NAV TOGGLE ================= */
-
-.mobile-topbar { display: none; }
-@media (max-width: 900px) {
-  .mobile-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--ink);
-    padding: 14px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
-  .sidebar { display: none; }
-  .sidebar.open { display: flex; position: fixed; z-index: 60; width: 260px; box-shadow: var(--shadow-pop); }
-  .mobile-menu-btn { background: transparent; border: none; color: var(--paper); width: 30px; height: 30px; }
-}
-
-/* ================= SCROLLBAR ================= */
-
-::-webkit-scrollbar { width: 9px; height: 9px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: var(--kraft); }
-
-</style>
-</head>
-<body>
-
-<div id="root"></div>
-
-<script>
-// Seed data extracted from the 3 source Google Sheets:
-// 1. Apparel_Ops_Global_Launch_Plan.xlsx  (Task Schedule + Gantt)
-// 2. Meeting Minutes
-// 3. Engagement Tracker
-
-const SEED_MEMBERS = [
-  { id: "muslim",  name: "Muslim",  color: "#C4622D", initials: "MU" },
-  { id: "kollol",  name: "Kollol",  color: "#2D5F4C", initials: "KO" },
-  { id: "tafsir",  name: "Tafsir",  color: "#3E5C76", initials: "TA" },
-  { id: "saklain", name: "Saklain", color: "#8B5E3C", initials: "SA" },
-  { id: "parvez",  name: "Parvez",  color: "#6B4C7A", initials: "PA" },
-];
-
-const SEED_PHASES = [
-  { id: 0, name: "Phase 0: Foundation & Branding",   color: "#8B7355" },
-  { id: 1, name: "Phase 1: Digital Presence Setup",  color: "#3E5C76" },
-  { id: 2, name: "Phase 2: Content & Platform Production", color: "#C4622D" },
-  { id: 3, name: "Phase 3: Pre-Launch Marketing",    color: "#2D5F4C" },
-  { id: 4, name: "Phase 4: Launch",                  color: "#B0413E" },
-  { id: 5, name: "Phase 5: Post-Launch",              color: "#6B4C7A" },
-];
-
-// Owner/team-member text from the sheet is normalized to member ids where possible.
-const SEED_TASKS = [
-  { id: "T1",  phase: 0, title: "Finalize brand identity (logo, colors, tagline usage)", owner: "Founder", start: "2026-07-06", end: "2026-07-08", duration: 3, status: "Not Started", collaborators: ["muslim","kollol","saklain"] },
-  { id: "T2",  phase: 0, title: "Register trade license / business (TIN, bank account)", owner: "Founder", start: "2026-07-06", end: "2026-07-17", duration: 12, status: "Not Started", collaborators: ["saklain"] },
-  { id: "T3",  phase: 0, title: "Buy domain name + matching social handles", owner: "Founder", start: "2026-07-06", end: "2026-07-06", duration: 1, status: "Not Started", collaborators: ["muslim","tafsir"] },
-  { id: "T4",  phase: 0, title: "Set up professional email (Google Workspace)", owner: "Founder", start: "2026-07-07", end: "2026-07-07", duration: 1, status: "Not Started", collaborators: ["muslim","tafsir"] },
-  { id: "T5",  phase: 0, title: "Finalize curriculum outline, pricing & batch size", owner: "Founder", start: "2026-07-06", end: "2026-07-12", duration: 7, status: "Ongoing", collaborators: [] },
-  { id: "T6",  phase: 1, title: "Create Facebook Page", owner: "Marketing", start: "2026-07-13", end: "2026-07-13", duration: 1, status: "Done", collaborators: ["muslim"] },
-  { id: "T7",  phase: 1, title: "Create LinkedIn Company Page", owner: "Marketing", start: "2026-07-13", end: "2026-07-13", duration: 1, status: "Done", collaborators: ["muslim"] },
-  { id: "T8",  phase: 1, title: "Create YouTube channel + Instagram (optional)", owner: "Marketing", start: "2026-07-14", end: "2026-07-14", duration: 1, status: "Done", collaborators: ["muslim"] },
-  { id: "T9",  phase: 1, title: "Set up WhatsApp Business number", owner: "Marketing", start: "2026-07-14", end: "2026-07-14", duration: 1, status: "Not Started", collaborators: ["saklain"] },
-  { id: "T10", phase: 1, title: "Build landing page / simple website", owner: "Web", start: "2026-07-13", end: "2026-08-02", duration: 21, status: "Not Started", collaborators: ["tafsir"] },
-  { id: "T11", phase: 2, title: "Choose LMS platform (Classroom / Teachable)", owner: "Founder", start: "2026-07-20", end: "2026-07-22", duration: 3, status: "Not Started", collaborators: ["tafsir"] },
-  { id: "T12", phase: 2, title: "Set up payment gateway (bKash / Nagad / SSLCommerz)", owner: "Founder", start: "2026-07-20", end: "2026-07-26", duration: 7, status: "Not Started", collaborators: [] },
-  { id: "T13", phase: 2, title: "Record Modules 1-3 (Work Study, Lean, TPM)", owner: "Instructor", start: "2026-07-20", end: "2026-08-02", duration: 14, status: "Not Started", collaborators: ["saklain","tafsir"] },
-  { id: "T14", phase: 2, title: "Record Modules 4-7 (DMAIC, Costing, Digital, Compliance)", owner: "Instructor", start: "2026-08-03", end: "2026-08-16", duration: 14, status: "Not Started", collaborators: ["saklain","tafsir"] },
-  { id: "T15", phase: 2, title: "Create slides, workbooks & quizzes", owner: "Instructor", start: "2026-07-20", end: "2026-08-16", duration: 28, status: "Not Started", collaborators: ["saklain","tafsir"] },
-  { id: "T16", phase: 2, title: "QA / test full course platform end-to-end", owner: "Founder", start: "2026-08-17", end: "2026-08-19", duration: 3, status: "Not Started", collaborators: ["tafsir"] },
-  { id: "T17", phase: 3, title: "Start organic content posting (2-3x/week)", owner: "Marketing", start: "2026-07-13", end: "2026-08-23", duration: 42, status: "Not Started", collaborators: [] },
-  { id: "T18", phase: 3, title: "Build waitlist (form + WhatsApp/email capture)", owner: "Marketing", start: "2026-07-27", end: "2026-08-23", duration: 28, status: "Not Started", collaborators: [] },
-  { id: "T19", phase: 3, title: "Produce teaser / trailer video", owner: "Marketing", start: "2026-08-10", end: "2026-08-16", duration: 7, status: "Not Started", collaborators: [] },
-  { id: "T20", phase: 3, title: "Open early-bird registration", owner: "Marketing", start: "2026-08-17", end: "2026-08-23", duration: 7, status: "Not Started", collaborators: [] },
-  { id: "T21", phase: 3, title: "Outreach to factories/HR for referrals & partnerships", owner: "Founder", start: "2026-08-03", end: "2026-08-23", duration: 21, status: "Not Started", collaborators: [] },
-  { id: "T22", phase: 4, title: "Official launch campaign (paid ads + announcement)", owner: "Marketing", start: "2026-08-24", end: "2026-08-27", duration: 4, status: "Not Started", collaborators: ["tafsir"] },
-  { id: "T23", phase: 4, title: "Open full enrollment", owner: "Marketing", start: "2026-08-24", end: "2026-08-30", duration: 7, status: "Not Started", collaborators: [] },
-  { id: "T24", phase: 4, title: "First live batch starts", owner: "Instructor", start: "2026-08-31", end: "2026-08-31", duration: 1, status: "Not Started", collaborators: [] },
-  { id: "T25", phase: 5, title: "Collect feedback & testimonials mid-course", owner: "Founder", start: "2026-09-07", end: "2026-09-13", duration: 7, status: "Not Started", collaborators: ["saklain"] },
-  { id: "T26", phase: 5, title: "Iterate curriculum/content based on feedback", owner: "Instructor", start: "2026-09-14", end: "2026-09-20", duration: 7, status: "Not Started", collaborators: [] },
-  { id: "T27", phase: 5, title: "Plan Batch 2 marketing & pricing review", owner: "Founder", start: "2026-09-21", end: "2026-09-27", duration: 7, status: "Not Started", collaborators: ["saklain"] },
-];
-
-const SEED_MEETINGS = [
-  { id: "M1", date: "2026-07-07", agenda: "Google Meet/ Teams/ Zoom", discussed: "User friendliness, cost", actionItem: "Through a perfect analysis select the best platform for us", leader: "tafsir", members: [], deadline: "2026-07-10", status: "Open" },
-  { id: "M2", date: "2026-07-07", agenda: "Two platform", discussed: "", actionItem: "AI analysis on keeping AOG", leader: "kollol", members: [], deadline: "2026-07-10", status: "Open" },
-  { id: "M3", date: "2026-07-07", agenda: "Engagement Consistency", discussed: "", actionItem: "Everyone will follow it", leader: "", members: ["muslim","kollol","tafsir","saklain","parvez"], deadline: "", status: "Continuous" },
-  { id: "M4", date: "2026-07-07", agenda: "Free Content Creation", discussed: "Submit idea from everyone which will be filtered by Muslim & Kollol", actionItem: "", leader: "muslim", members: ["muslim","kollol","tafsir","saklain","parvez"], deadline: "2026-07-11", status: "Open" },
-  { id: "M5", date: "2026-07-07", agenda: "Apparel_Ops_Global_Launch_Plan", discussed: "Put your name and comment if required for every task", actionItem: "", leader: "", members: ["muslim","kollol","tafsir","saklain","parvez"], deadline: "2026-07-09", status: "Open" },
-  { id: "M6", date: "2026-07-07", agenda: "Course launch", discussed: "For fresh and officer level", actionItem: "", leader: "", members: [], deadline: "2026-07-14", status: "Open" },
-  { id: "M7", date: "2026-07-07", agenda: "Weekly meeting", discussed: "Tuesday from 10:00 pm to 11:30 pm", actionItem: "", leader: "", members: [], deadline: "", status: "Continuous" },
-];
-
-const SEED_LOGS = [
-  { id: "L1", date: "2026-07-06", member: "muslim", hours: 1.5, uploads: 0, task: "Reviewed documents from team mates, misc communication and prepared the engagement tracker.", status: "Completed" },
-  { id: "L2", date: "2026-07-07", member: "muslim", hours: 1.5, uploads: 0, task: "Common meeting", status: "Completed" },
-  { id: "L3", date: "2026-07-07", member: "kollol", hours: 1.5, uploads: 0, task: "Common meeting", status: "Completed" },
-  { id: "L4", date: "2026-07-07", member: "tafsir", hours: 1.5, uploads: 0, task: "Common meeting", status: "Completed" },
-  { id: "L5", date: "2026-07-07", member: "saklain", hours: 1.5, uploads: 0, task: "Common meeting", status: "Completed" },
-  { id: "L6", date: "2026-07-07", member: "parvez", hours: 1.5, uploads: 0, task: "Common meeting", status: "Completed" },
-  { id: "L7", date: "2026-07-08", member: "muslim", hours: 0.5, uploads: 1, task: "Uploading content in The SmartIE Edge, YT, FB, LI, WA", status: "In Progress" },
-  { id: "L8", date: "2026-07-08", member: "tafsir", hours: 1, uploads: 0, task: "Online platform selection analysis for live classes", status: "Completed" },
-  { id: "L9", date: "2026-07-08", member: "tafsir", hours: 1.5, uploads: 0, task: "Brainstorm & try to create a course outline for online posting", status: "Completed" },
-];
-
-</script>
-<script>
-// ============ STATE MANAGEMENT ============
-// Everything persists to localStorage so the team's edits survive reloads,
-// without needing any backend — this is what lets the whole thing live as
-// a static GitHub Pages site.
-
-const STORAGE_KEY = "aog_hub_v1";
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.warn("Could not read saved data, starting fresh.", e);
-  }
-  return {
-    members: SEED_MEMBERS,
-    phases: SEED_PHASES,
-    tasks: SEED_TASKS,
-    meetings: SEED_MEETINGS,
-    logs: SEED_LOGS,
-  };
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    members: STATE.members,
-    phases: STATE.phases,
-    tasks: STATE.tasks,
-    meetings: STATE.meetings,
-    logs: STATE.logs,
-  }));
-  showToast("Saved");
-  if (typeof window.pushStateToFirestore === "function") {
-    window.pushStateToFirestore(STATE);
-  }
-}
-
-let STATE = loadState();
-window.STATE = STATE;
-
-let UI = {
-  route: "dashboard",       // dashboard | tasks | gantt | meetings | logs | team
-  taskSearch: "",
-  taskPhaseFilter: "all",
-  taskStatusFilter: "all",
-  taskOwnerFilter: "all",
-  collapsedPhases: {},
-  mobileNavOpen: false,
-};
-
-// ============ HELPERS ============
-
-function uid(prefix) {
-  return prefix + Math.random().toString(36).slice(2, 8);
-}
-
-function getMember(id) {
-  return STATE.members.find(m => m.id === id);
-}
-
-function memberName(id) {
-  const m = getMember(id);
-  return m ? m.name : id || "—";
-}
-
-function statusClass(status) {
-  return "status-" + String(status || "notstarted").toLowerCase().replace(/\s+/g, "");
-}
-
-function fmtDate(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso + "T00:00:00");
-  if (isNaN(d)) return iso;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function fmtDateFull(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso + "T00:00:00");
-  if (isNaN(d)) return iso;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function daysBetween(a, b) {
-  const d1 = new Date(a + "T00:00:00");
-  const d2 = new Date(b + "T00:00:00");
-  return Math.round((d2 - d1) / 86400000);
-}
-
-function escapeHtml(str) {
-  if (str == null) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function avatarEl(memberId, size) {
-  const m = getMember(memberId);
-  if (!m) return "";
-  const cls = size === "lg" ? "avatar avatar-lg" : "avatar";
-  return `<span class="${cls}" style="background:${m.color}" title="${escapeHtml(m.name)}">${m.initials}</span>`;
-}
-
-function avatarStack(memberIds) {
-  if (!memberIds || !memberIds.length) return `<span style="font-family:var(--font-mono);font-size:10.5px;color:var(--line-strong)">unassigned</span>`;
-  return `<span class="avatar-stack">${memberIds.map(id => avatarEl(id)).join("")}</span>`;
-}
-
-let toastTimer = null;
-function showToast(msg) {
-  const el = document.getElementById("toast");
-  if (!el) return;
-  el.innerHTML = `<span class="dot"></span> ${escapeHtml(msg)}`;
-  el.style.display = "flex";
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.style.display = "none"; }, 2200);
-}
-
-function getPhase(id) {
-  return STATE.phases.find(p => p.id === id);
-}
-
-// Task progress heuristic for phase progress bars
-function phaseProgress(phaseId) {
-  const tasks = STATE.tasks.filter(t => t.phase === phaseId);
-  if (!tasks.length) return 0;
-  const weight = { "Done": 1, "Ongoing": 0.5, "Not Started": 0, "Blocked": 0 };
-  const sum = tasks.reduce((acc, t) => acc + (weight[t.status] ?? 0), 0);
-  return Math.round((sum / tasks.length) * 100);
-}
-
-function overallStats() {
-  const total = STATE.tasks.length;
-  const done = STATE.tasks.filter(t => t.status === "Done").length;
-  const ongoing = STATE.tasks.filter(t => t.status === "Ongoing").length;
-  const notStarted = STATE.tasks.filter(t => t.status === "Not Started").length;
-  const openActions = STATE.meetings.filter(m => m.status === "Open").length;
-  const totalHours = STATE.logs.reduce((a, l) => a + (Number(l.hours) || 0), 0);
-  return { total, done, ongoing, notStarted, openActions, totalHours };
-}
-
-</script>
-<script>
-// ============ ICONS (inline SVG, stroke-based, consistent 1.5px weight) ============
-
-const ICONS = {
-  dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>`,
-  tasks: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`,
-  gantt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h9M4 12h13M4 18h6"/></svg>`,
-  meetings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v3M16 3v3M4 9h16"/><rect x="3" y="5" width="18" height="16" rx="2"/></svg>`,
-  logs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 7v5l3 3"/><circle cx="12" cy="12" r="9"/></svg>`,
-  team: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6M17 6.5a3 3 0 010 6M22 20c0-2.6-1.8-4.8-4.3-5.6"/></svg>`,
-  plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
-  search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
-  chevron: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`,
-  close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
-  download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>`,
-  upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 16V3m0 0l-4 4m4-4l4 4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>`,
-  reset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 16v-4h4"/></svg>`,
-  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
-  film: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M8 4v16M16 4v16M3 9h5M16 9h5M3 15h5M16 15h5"/></svg>`,
-  spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/></svg>`,
-  empty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 12h18"/></svg>`,
-  menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
-  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>`,
-};
-
-const NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard", icon: "dashboard" },
-  { key: "tasks", label: "Task Board", icon: "tasks" },
-  { key: "gantt", label: "Timeline", icon: "gantt" },
-  { key: "meetings", label: "Meetings", icon: "meetings" },
-  { key: "logs", label: "Activity Log", icon: "logs" },
-  { key: "team", label: "Team", icon: "team" },
-];
-
-// ============ ROOT RENDER ============
-
-function render() {
-  const root = document.getElementById("root");
-  root.innerHTML = `
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apparel Ops Global — Ops Hub</title>
+    <meta
+      name="description"
+      content="Task board, timeline, meetings, and activity tracker for the Apparel Ops Global course launch team."
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+      :root {
+        /* Color tokens — factory-floor palette, not SaaS-blue */
+        --ink: #12181b; /* near-black charcoal, floor concrete */
+        --ink-soft: #2a3438;
+        --paper: #f7f5f0; /* bone / fabric white */
+        --paper-dim: #ede9e0;
+        --paper-card: #ffffff;
+        --thread: #c4622d; /* burnt thread-orange — signature accent, used sparingly */
+        --thread-dim: #e8d9cd;
+        --spool: #2d5f4c; /* spool-green — done / on-track */
+        --spool-dim: #dce6e0;
+        --kraft: #8b7355; /* kraft-tag brown — borders, muted */
+        --kraft-dim: #e7e0d3;
+        --alert: #b0413e; /* stitched-red — blocked / overdue */
+        --alert-dim: #f0dbd9;
+        --line: #ddd6c7; /* hairline border, unbleached thread */
+        --line-strong: #c7bea9;
+
+        --font-display: "Archivo Narrow", "Oswald", sans-serif;
+        --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+        --radius: 3px;
+        --shadow-card: 0 1px 2px rgba(18, 24, 27, 0.06), 0 1px 0 rgba(18, 24, 27, 0.04);
+        --shadow-pop: 0 8px 24px rgba(18, 24, 27, 0.14), 0 2px 6px rgba(18, 24, 27, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font-body);
+        background: var(--paper);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      ::selection {
+        background: var(--thread);
+        color: var(--paper);
+      }
+
+      /* Reduced motion respected */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+
+      /* Visible keyboard focus everywhere */
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 2px solid var(--thread);
+        outline-offset: 2px;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        margin: 0;
+        color: var(--ink);
+      }
+
+      p {
+        margin: 0;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+      }
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+      }
+
+      .mono {
+        font-family: var(--font-mono);
+        letter-spacing: -0.01em;
+      }
+
+      /* ================= APP SHELL ================= */
+
+      .app-shell {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        min-height: 100vh;
+      }
+
+      @media (max-width: 900px) {
+        .app-shell {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ---- Sidebar ---- */
+      .sidebar {
+        background: var(--ink);
+        color: var(--paper);
+        padding: 22px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+      }
+
+      @media (max-width: 900px) {
+        .sidebar {
+          position: static;
+          height: auto;
+        }
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 4px;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        background: var(--thread);
+        border-radius: var(--radius);
+        display: grid;
+        place-items: center;
+        color: var(--ink);
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .brand-mark::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border: 1.5px dashed rgba(18, 24, 27, 0.35);
+        border-radius: 2px;
+        pointer-events: none;
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+      }
+      .brand-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15.5px;
+        color: var(--paper);
+      }
+      .brand-sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--kraft);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 2px;
+      }
+
+      .nav-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .nav-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(247, 245, 240, 0.4);
+        padding: 6px 10px 4px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: var(--radius);
+        color: rgba(247, 245, 240, 0.75);
+        background: transparent;
+        border: none;
+        text-align: left;
+        font-size: 13.5px;
+        font-weight: 500;
+        transition:
+          background 0.12s ease,
+          color 0.12s ease;
+        width: 100%;
+      }
+      .nav-item:hover {
+        background: rgba(247, 245, 240, 0.06);
+        color: var(--paper);
+      }
+      .nav-item.active {
+        background: rgba(196, 98, 45, 0.16);
+        color: var(--paper);
+        position: relative;
+      }
+      .nav-item.active::before {
+        content: "";
+        position: absolute;
+        left: -16px;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        background: var(--thread);
+        border-radius: 0 2px 2px 0;
+      }
+      .nav-icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        opacity: 0.9;
+      }
+      .nav-count {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: rgba(247, 245, 240, 0.45);
+        background: rgba(247, 245, 240, 0.08);
+        padding: 1px 6px;
+        border-radius: 8px;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid rgba(247, 245, 240, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .data-status {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: rgba(247, 245, 240, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 4px;
+      }
+      .data-status .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--spool);
+        flex-shrink: 0;
+      }
+
+      .footer-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        background: rgba(247, 245, 240, 0.06);
+        border: 1px solid rgba(247, 245, 240, 0.12);
+        border-radius: var(--radius);
+        color: rgba(247, 245, 240, 0.8);
+        font-size: 12px;
+        font-weight: 500;
+        width: 100%;
+        transition: background 0.12s ease;
+      }
+      .footer-btn:hover {
+        background: rgba(247, 245, 240, 0.12);
+        color: var(--paper);
+      }
+
+      /* ---- Main content ---- */
+      .main {
+        padding: 28px 48px 60px;
+        max-width: none;
+        width: 100%;
+      }
+
+      @media (min-width: 1200px) {
+        .main {
+          padding-left: 64px;
+          padding-right: 64px;
+        }
+      }
+
+      @media (min-width: 1600px) {
+        .main {
+          padding-left: 80px;
+          padding-right: 80px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .main {
+          padding: 18px 16px 40px;
+        }
+      }
+
+      .page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+
+      .page-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--thread);
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      .page-title {
+        font-size: 26px;
+      }
+      .page-desc {
+        color: var(--kraft);
+        font-size: 13.5px;
+        margin-top: 6px;
+        max-width: 60ch;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      /* ================= BUTTONS ================= */
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 14px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: all 0.12s ease;
+        white-space: nowrap;
+      }
+      .btn svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .btn-primary {
+        background: var(--thread);
+        color: var(--paper);
+        border-color: var(--thread);
+      }
+      .btn-primary:hover {
+        background: #a9531f;
+        border-color: #a9531f;
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink);
+        border-color: var(--line-strong);
+      }
+      .btn-ghost:hover {
+        background: var(--paper-dim);
+      }
+
+      .btn-subtle {
+        background: var(--paper-card);
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      .btn-subtle:hover {
+        border-color: var(--line-strong);
+      }
+
+      .btn-danger-text {
+        background: transparent;
+        color: var(--alert);
+        border: none;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      .btn-danger-text:hover {
+        text-decoration: underline;
+      }
+
+      .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        color: var(--ink);
+      }
+      .btn-icon:hover {
+        border-color: var(--line-strong);
+        background: var(--paper-dim);
+      }
+
+      /* ================= STAT STRIP ================= */
+
+      .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      @media (max-width: 720px) {
+        .stat-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .stat-card {
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--accent, var(--kraft));
+      }
+      .stat-value {
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .stat-label {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--kraft);
+        margin-top: 6px;
+      }
+
+      /* ================= PHASE SECTION ================= */
+
+      .phase-block {
+        margin-bottom: 28px;
+      }
+
+      .phase-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .phase-tab {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--paper);
+        background: var(--phase-color, var(--kraft));
+        padding: 3px 8px;
+        border-radius: 2px;
+        letter-spacing: 0.03em;
+      }
+      .phase-title-text {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15.5px;
+      }
+      .phase-progress-bar {
+        flex: 1;
+        height: 5px;
+        background: var(--paper-dim);
+        border-radius: 3px;
+        overflow: hidden;
+        min-width: 60px;
+        max-width: 160px;
+      }
+      .phase-progress-fill {
+        height: 100%;
+        background: var(--phase-color, var(--spool));
+        border-radius: 3px;
+      }
+      .phase-count {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--kraft);
+      }
+      .phase-chevron {
+        width: 14px;
+        height: 14px;
+        color: var(--kraft);
+        transition: transform 0.15s ease;
+        flex-shrink: 0;
+      }
+      .phase-chevron.collapsed {
+        transform: rotate(-90deg);
+      }
+
+      /* Lighter-weight phase row for dashboard summary (no ticket notch) */
+      .phase-summary-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: border-color 0.12s ease;
+      }
+      .phase-summary-row:hover {
+        border-color: var(--line-strong);
+      }
+      .phase-summary-name {
+        font-size: 12.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+      }
+      .phase-summary-count {
+        font-size: 10.5px;
+        color: var(--kraft);
+        white-space: nowrap;
+      }
+      @media (max-width: 480px) {
+        .phase-summary-name {
+          max-width: 100px;
+        }
+      }
+
+      .task-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 10px;
+      }
+
+      /* ================= TASK TICKET CARD ================= */
+
+      .ticket {
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 13px 14px 12px;
+        position: relative;
+        transition:
+          border-color 0.12s ease,
+          box-shadow 0.12s ease,
+          transform 0.12s ease;
+        cursor: pointer;
+      }
+      .ticket:hover {
+        border-color: var(--line-strong);
+        box-shadow: var(--shadow-card);
+        transform: translateY(-1px);
+      }
+
+      /* Punch-hole notch motif — work order ticket detail */
+      .ticket::before {
+        content: "";
+        position: absolute;
+        left: -5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 50%;
+      }
+
+      .ticket-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .ticket-id {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--kraft);
+        font-weight: 600;
+      }
+      .ticket-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.35;
+        margin-bottom: 10px;
+        color: var(--ink);
+      }
+
+      .ticket-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .ticket-dates {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--kraft);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .avatar-stack {
+        display: flex;
+        align-items: center;
+      }
+      .avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-family: var(--font-mono);
+        font-size: 8.5px;
+        font-weight: 700;
+        color: var(--paper);
+        border: 1.5px solid var(--paper-card);
+        margin-left: -6px;
+        flex-shrink: 0;
+      }
+      .avatar:first-child {
+        margin-left: 0;
+      }
+      .avatar-lg {
+        width: 30px;
+        height: 30px;
+        font-size: 10.5px;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 3px 7px;
+        border-radius: 2px;
+      }
+      .status-chip .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+      }
+
+      .status-done {
+        background: var(--spool-dim);
+        color: var(--spool);
+      }
+      .status-done .dot {
+        background: var(--spool);
+      }
+      .status-ongoing {
+        background: var(--thread-dim);
+        color: var(--thread);
+      }
+      .status-ongoing .dot {
+        background: var(--thread);
+      }
+      .status-notstarted {
+        background: var(--kraft-dim);
+        color: var(--kraft);
+      }
+      .status-notstarted .dot {
+        background: var(--kraft);
+      }
+      .status-blocked {
+        background: var(--alert-dim);
+        color: var(--alert);
+      }
+      .status-blocked .dot {
+        background: var(--alert);
+      }
+      .status-open {
+        background: var(--thread-dim);
+        color: var(--thread);
+      }
+      .status-open .dot {
+        background: var(--thread);
+      }
+      .status-continuous {
+        background: #dde4ec;
+        color: #3e5c76;
+      }
+      .status-continuous .dot {
+        background: #3e5c76;
+      }
+      .status-inprogress {
+        background: var(--thread-dim);
+        color: var(--thread);
+      }
+      .status-inprogress .dot {
+        background: var(--thread);
+      }
+      .status-completed {
+        background: var(--spool-dim);
+        color: var(--spool);
+      }
+      .status-completed .dot {
+        background: var(--spool);
+      }
+
+      .ticket-tearline {
+        position: absolute;
+        bottom: -1px;
+        left: 10px;
+        right: 10px;
+        height: 1px;
+        background-image: linear-gradient(to right, var(--line) 50%, transparent 50%);
+        background-size: 6px 1px;
+      }
+
+      /* ================= VIEW SWITCH / FILTER BAR ================= */
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .view-switch {
+        display: flex;
+        background: var(--paper-dim);
+        border-radius: var(--radius);
+        padding: 3px;
+        gap: 2px;
+      }
+      .view-switch-btn {
+        padding: 6px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--kraft);
+        background: transparent;
+        border: none;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .view-switch-btn.active {
+        background: var(--paper-card);
+        color: var(--ink);
+        box-shadow: var(--shadow-card);
+      }
+      .view-switch-btn svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 7px 10px;
+        min-width: 200px;
+        flex: 1;
+        max-width: 280px;
+      }
+      .search-box svg {
+        width: 14px;
+        height: 14px;
+        color: var(--kraft);
+        flex-shrink: 0;
+      }
+      .search-box input {
+        border: none;
+        background: transparent;
+        outline: none;
+        font-size: 13px;
+        width: 100%;
+        color: var(--ink);
+      }
+      .search-box input::placeholder {
+        color: var(--line-strong);
+      }
+
+      .filter-select {
+        padding: 7px 26px 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper-card)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B7355' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")
+          no-repeat right 9px center;
+        appearance: none;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--ink);
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      /* ================= GANTT ================= */
+
+      .gantt-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--paper-card);
+      }
+      .gantt {
+        min-width: 960px;
+      }
+      .gantt-row {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        border-bottom: 1px solid var(--line);
+        align-items: stretch;
+      }
+      .gantt-row:last-child {
+        border-bottom: none;
+      }
+      .gantt-row.head {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .gantt-label {
+        padding: 9px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        border-right: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .gantt-row.head .gantt-label {
+        border-right-color: rgba(247, 245, 240, 0.15);
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .gantt-phase-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: var(--dot-color, var(--kraft));
+      }
+
+      .gantt-track {
+        position: relative;
+        padding: 7px 12px;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+      }
+      .gantt-row.head .gantt-track {
+        display: flex;
+        padding: 9px 0;
+      }
+      .gantt-week-label {
+        flex: 1;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: rgba(247, 245, 240, 0.6);
+        border-left: 1px solid rgba(247, 245, 240, 0.1);
+      }
+      .gantt-week-label:first-child {
+        border-left: none;
+      }
+
+      .gantt-bar-bg {
+        position: absolute;
+        inset: 0 12px;
+        display: flex;
+      }
+      .gantt-week-col {
+        flex: 1;
+        border-left: 1px solid var(--paper-dim);
+      }
+      .gantt-week-col:first-child {
+        border-left: none;
+      }
+
+      .gantt-bar {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 20px;
+        border-radius: 3px;
+        background: var(--bar-color, var(--kraft));
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+        overflow: hidden;
+      }
+      .gantt-bar-label {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        color: var(--paper);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .gantt-bar.thread-texture {
+        background-image: repeating-linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.14) 0,
+          rgba(255, 255, 255, 0.14) 2px,
+          transparent 2px,
+          transparent 6px
+        );
+      }
+
+      /* ================= MEETINGS ================= */
+
+      .meeting-card {
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--thread);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: box-shadow 0.12s ease;
+      }
+      .meeting-card:hover {
+        box-shadow: var(--shadow-card);
+      }
+      .meeting-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .meeting-date {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--kraft);
+        margin-bottom: 3px;
+      }
+      .meeting-agenda {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+      }
+      .meeting-body {
+        font-size: 13px;
+        color: var(--ink-soft);
+        margin: 8px 0;
+        line-height: 1.5;
+      }
+      .meeting-action {
+        background: var(--paper-dim);
+        border-radius: 2px;
+        padding: 8px 10px;
+        font-size: 12.5px;
+        margin: 8px 0;
+        border-left: 2px solid var(--kraft);
+      }
+      .meeting-action-label {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--kraft);
+        margin-bottom: 3px;
+      }
+      .meeting-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .meeting-people {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        color: var(--kraft);
+      }
+
+      /* ================= ACTIVITY LOG ================= */
+
+      .log-table-wrap {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--paper-card);
+      }
+      .log-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .log-table th {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--paper);
+        background: var(--ink);
+        padding: 10px 12px;
+        font-weight: 600;
+      }
+      .log-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: middle;
+      }
+      .log-table tr:last-child td {
+        border-bottom: none;
+      }
+      .log-table tr:hover td {
+        background: var(--paper-dim);
+      }
+      .log-member-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .log-hours {
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+
+      /* Daily log timeline (alternative view) */
+      .day-group {
+        margin-bottom: 22px;
+      }
+      .day-group-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--line-strong);
+      }
+      .day-group-date {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 14.5px;
+      }
+      .day-group-stats {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--kraft);
+      }
+
+      .log-entry {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .log-entry:last-child {
+        border-bottom: none;
+      }
+      .log-entry-body {
+        flex: 1;
+      }
+      .log-entry-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 2px;
+        flex-wrap: wrap;
+      }
+      .log-entry-name {
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .log-entry-task {
+        font-size: 13px;
+        color: var(--ink-soft);
+      }
+      .log-entry-meta {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--kraft);
+        margin-top: 3px;
+      }
+
+      /* ================= TEAM PAGE ================= */
+
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
+      }
+      .team-card {
+        background: var(--paper-card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px;
+        text-align: center;
+      }
+      .team-card .avatar-lg {
+        width: 52px;
+        height: 52px;
+        font-size: 17px;
+        margin: 0 auto 10px;
+      }
+      .team-card-name {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 3px;
+      }
+      .team-card-role {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--kraft);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .team-card-stats {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+      }
+      .team-stat-val {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 17px;
+      }
+      .team-stat-label {
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        color: var(--kraft);
+        text-transform: uppercase;
+        margin-top: 2px;
+      }
+
+      /* ================= EMPTY STATES ================= */
+
+      .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        border: 1.5px dashed var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--paper-card);
+      }
+      .empty-state svg {
+        width: 36px;
+        height: 36px;
+        color: var(--line-strong);
+        margin-bottom: 12px;
+      }
+      .empty-state-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+      .empty-state-desc {
+        font-size: 13px;
+        color: var(--kraft);
+        max-width: 36ch;
+        margin: 0 auto 16px;
+      }
+
+      /* ================= MODAL ================= */
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 24, 27, 0.5);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px 16px;
+        z-index: 100;
+        overflow-y: auto;
+        animation: fadeIn 0.15s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .modal {
+        background: var(--paper-card);
+        border-radius: 5px;
+        width: 100%;
+        max-width: 560px;
+        box-shadow: var(--shadow-pop);
+        animation: modalPop 0.16s ease;
+        margin-bottom: 40px;
+      }
+      @keyframes modalPop {
+        from {
+          opacity: 0;
+          transform: translateY(6px) scale(0.99);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      .modal-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 17px;
+      }
+      .modal-close {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        color: var(--kraft);
+        border: none;
+        background: transparent;
+      }
+      .modal-close:hover {
+        background: var(--paper-dim);
+        color: var(--ink);
+      }
+      .modal-body {
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .modal-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 16px 22px;
+        border-top: 1px solid var(--line);
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .field-label {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--kraft);
+        font-weight: 600;
+      }
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .field input[type="text"],
+      .field input[type="date"],
+      .field input[type="number"],
+      .field select,
+      .field textarea {
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        font-size: 13.5px;
+        color: var(--ink);
+        background: var(--paper-card);
+        outline: none;
+      }
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        border-color: var(--thread);
+      }
+      .field textarea {
+        resize: vertical;
+        min-height: 60px;
+        font-family: inherit;
+      }
+
+      .chip-select {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip-option {
+        padding: 6px 11px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--kraft);
+        background: var(--paper-card);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chip-option.selected {
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      .chip-option .avatar {
+        width: 16px;
+        height: 16px;
+        font-size: 7px;
+        margin: 0;
+        border: none;
+      }
+
+      /* ================= DETAIL DRAWER ================= */
+
+      .detail-section {
+        margin-bottom: 16px;
+      }
+      .detail-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--kraft);
+        margin-bottom: 6px;
+      }
+      .detail-value {
+        font-size: 14px;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      /* ================= TOAST ================= */
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--ink);
+        color: var(--paper);
+        padding: 11px 18px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: var(--shadow-pop);
+        z-index: 200;
+        animation: toastIn 0.2s ease;
+      }
+      .toast .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--spool);
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 8px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+      }
+
+      /* ================= MOBILE NAV TOGGLE ================= */
+
+      .mobile-topbar {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        .mobile-topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: var(--ink);
+          padding: 14px 16px;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+        }
+        .sidebar {
+          display: none;
+        }
+        .sidebar.open {
+          display: flex;
+          position: fixed;
+          z-index: 60;
+          width: 260px;
+          box-shadow: var(--shadow-pop);
+        }
+        .mobile-menu-btn {
+          background: transparent;
+          border: none;
+          color: var(--paper);
+          width: 30px;
+          height: 30px;
+        }
+      }
+
+      /* ================= SCROLLBAR ================= */
+
+      ::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--line-strong);
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--kraft);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      // Seed data extracted from the 3 source Google Sheets:
+      // 1. Apparel_Ops_Global_Launch_Plan.xlsx  (Task Schedule + Gantt)
+      // 2. Meeting Minutes
+      // 3. Engagement Tracker
+
+      const SEED_MEMBERS = [
+        { id: "muslim", name: "Muslim", color: "#C4622D", initials: "MU" },
+        { id: "kollol", name: "Kollol", color: "#2D5F4C", initials: "KO" },
+        { id: "tafsir", name: "Tafsir", color: "#3E5C76", initials: "TA" },
+        { id: "saklain", name: "Saklain", color: "#8B5E3C", initials: "SA" },
+        { id: "parvez", name: "Parvez", color: "#6B4C7A", initials: "PA" },
+      ];
+
+      const SEED_PHASES = [
+        { id: 0, name: "Phase 0: Foundation & Branding", color: "#8B7355" },
+        { id: 1, name: "Phase 1: Digital Presence Setup", color: "#3E5C76" },
+        { id: 2, name: "Phase 2: Content & Platform Production", color: "#C4622D" },
+        { id: 3, name: "Phase 3: Pre-Launch Marketing", color: "#2D5F4C" },
+        { id: 4, name: "Phase 4: Launch", color: "#B0413E" },
+        { id: 5, name: "Phase 5: Post-Launch", color: "#6B4C7A" },
+      ];
+
+      // Owner/team-member text from the sheet is normalized to member ids where possible.
+      const SEED_TASKS = [
+        {
+          id: "T1",
+          phase: 0,
+          title: "Finalize brand identity (logo, colors, tagline usage)",
+          owner: "Founder",
+          start: "2026-07-06",
+          end: "2026-07-08",
+          duration: 3,
+          status: "Not Started",
+          collaborators: ["muslim", "kollol", "saklain"],
+        },
+        {
+          id: "T2",
+          phase: 0,
+          title: "Register trade license / business (TIN, bank account)",
+          owner: "Founder",
+          start: "2026-07-06",
+          end: "2026-07-17",
+          duration: 12,
+          status: "Not Started",
+          collaborators: ["saklain"],
+        },
+        {
+          id: "T3",
+          phase: 0,
+          title: "Buy domain name + matching social handles",
+          owner: "Founder",
+          start: "2026-07-06",
+          end: "2026-07-06",
+          duration: 1,
+          status: "Not Started",
+          collaborators: ["muslim", "tafsir"],
+        },
+        {
+          id: "T4",
+          phase: 0,
+          title: "Set up professional email (Google Workspace)",
+          owner: "Founder",
+          start: "2026-07-07",
+          end: "2026-07-07",
+          duration: 1,
+          status: "Not Started",
+          collaborators: ["muslim", "tafsir"],
+        },
+        {
+          id: "T5",
+          phase: 0,
+          title: "Finalize curriculum outline, pricing & batch size",
+          owner: "Founder",
+          start: "2026-07-06",
+          end: "2026-07-12",
+          duration: 7,
+          status: "Ongoing",
+          collaborators: [],
+        },
+        {
+          id: "T6",
+          phase: 1,
+          title: "Create Facebook Page",
+          owner: "Marketing",
+          start: "2026-07-13",
+          end: "2026-07-13",
+          duration: 1,
+          status: "Done",
+          collaborators: ["muslim"],
+        },
+        {
+          id: "T7",
+          phase: 1,
+          title: "Create LinkedIn Company Page",
+          owner: "Marketing",
+          start: "2026-07-13",
+          end: "2026-07-13",
+          duration: 1,
+          status: "Done",
+          collaborators: ["muslim"],
+        },
+        {
+          id: "T8",
+          phase: 1,
+          title: "Create YouTube channel + Instagram (optional)",
+          owner: "Marketing",
+          start: "2026-07-14",
+          end: "2026-07-14",
+          duration: 1,
+          status: "Done",
+          collaborators: ["muslim"],
+        },
+        {
+          id: "T9",
+          phase: 1,
+          title: "Set up WhatsApp Business number",
+          owner: "Marketing",
+          start: "2026-07-14",
+          end: "2026-07-14",
+          duration: 1,
+          status: "Not Started",
+          collaborators: ["saklain"],
+        },
+        {
+          id: "T10",
+          phase: 1,
+          title: "Build landing page / simple website",
+          owner: "Web",
+          start: "2026-07-13",
+          end: "2026-08-02",
+          duration: 21,
+          status: "Not Started",
+          collaborators: ["tafsir"],
+        },
+        {
+          id: "T11",
+          phase: 2,
+          title: "Choose LMS platform (Classroom / Teachable)",
+          owner: "Founder",
+          start: "2026-07-20",
+          end: "2026-07-22",
+          duration: 3,
+          status: "Not Started",
+          collaborators: ["tafsir"],
+        },
+        {
+          id: "T12",
+          phase: 2,
+          title: "Set up payment gateway (bKash / Nagad / SSLCommerz)",
+          owner: "Founder",
+          start: "2026-07-20",
+          end: "2026-07-26",
+          duration: 7,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T13",
+          phase: 2,
+          title: "Record Modules 1-3 (Work Study, Lean, TPM)",
+          owner: "Instructor",
+          start: "2026-07-20",
+          end: "2026-08-02",
+          duration: 14,
+          status: "Not Started",
+          collaborators: ["saklain", "tafsir"],
+        },
+        {
+          id: "T14",
+          phase: 2,
+          title: "Record Modules 4-7 (DMAIC, Costing, Digital, Compliance)",
+          owner: "Instructor",
+          start: "2026-08-03",
+          end: "2026-08-16",
+          duration: 14,
+          status: "Not Started",
+          collaborators: ["saklain", "tafsir"],
+        },
+        {
+          id: "T15",
+          phase: 2,
+          title: "Create slides, workbooks & quizzes",
+          owner: "Instructor",
+          start: "2026-07-20",
+          end: "2026-08-16",
+          duration: 28,
+          status: "Not Started",
+          collaborators: ["saklain", "tafsir"],
+        },
+        {
+          id: "T16",
+          phase: 2,
+          title: "QA / test full course platform end-to-end",
+          owner: "Founder",
+          start: "2026-08-17",
+          end: "2026-08-19",
+          duration: 3,
+          status: "Not Started",
+          collaborators: ["tafsir"],
+        },
+        {
+          id: "T17",
+          phase: 3,
+          title: "Start organic content posting (2-3x/week)",
+          owner: "Marketing",
+          start: "2026-07-13",
+          end: "2026-08-23",
+          duration: 42,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T18",
+          phase: 3,
+          title: "Build waitlist (form + WhatsApp/email capture)",
+          owner: "Marketing",
+          start: "2026-07-27",
+          end: "2026-08-23",
+          duration: 28,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T19",
+          phase: 3,
+          title: "Produce teaser / trailer video",
+          owner: "Marketing",
+          start: "2026-08-10",
+          end: "2026-08-16",
+          duration: 7,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T20",
+          phase: 3,
+          title: "Open early-bird registration",
+          owner: "Marketing",
+          start: "2026-08-17",
+          end: "2026-08-23",
+          duration: 7,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T21",
+          phase: 3,
+          title: "Outreach to factories/HR for referrals & partnerships",
+          owner: "Founder",
+          start: "2026-08-03",
+          end: "2026-08-23",
+          duration: 21,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T22",
+          phase: 4,
+          title: "Official launch campaign (paid ads + announcement)",
+          owner: "Marketing",
+          start: "2026-08-24",
+          end: "2026-08-27",
+          duration: 4,
+          status: "Not Started",
+          collaborators: ["tafsir"],
+        },
+        {
+          id: "T23",
+          phase: 4,
+          title: "Open full enrollment",
+          owner: "Marketing",
+          start: "2026-08-24",
+          end: "2026-08-30",
+          duration: 7,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T24",
+          phase: 4,
+          title: "First live batch starts",
+          owner: "Instructor",
+          start: "2026-08-31",
+          end: "2026-08-31",
+          duration: 1,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T25",
+          phase: 5,
+          title: "Collect feedback & testimonials mid-course",
+          owner: "Founder",
+          start: "2026-09-07",
+          end: "2026-09-13",
+          duration: 7,
+          status: "Not Started",
+          collaborators: ["saklain"],
+        },
+        {
+          id: "T26",
+          phase: 5,
+          title: "Iterate curriculum/content based on feedback",
+          owner: "Instructor",
+          start: "2026-09-14",
+          end: "2026-09-20",
+          duration: 7,
+          status: "Not Started",
+          collaborators: [],
+        },
+        {
+          id: "T27",
+          phase: 5,
+          title: "Plan Batch 2 marketing & pricing review",
+          owner: "Founder",
+          start: "2026-09-21",
+          end: "2026-09-27",
+          duration: 7,
+          status: "Not Started",
+          collaborators: ["saklain"],
+        },
+      ];
+
+      const SEED_MEETINGS = [
+        {
+          id: "M1",
+          date: "2026-07-07",
+          agenda: "Google Meet/ Teams/ Zoom",
+          discussed: "User friendliness, cost",
+          actionItem: "Through a perfect analysis select the best platform for us",
+          leader: "tafsir",
+          members: [],
+          deadline: "2026-07-10",
+          status: "Open",
+        },
+        {
+          id: "M2",
+          date: "2026-07-07",
+          agenda: "Two platform",
+          discussed: "",
+          actionItem: "AI analysis on keeping AOG",
+          leader: "kollol",
+          members: [],
+          deadline: "2026-07-10",
+          status: "Open",
+        },
+        {
+          id: "M3",
+          date: "2026-07-07",
+          agenda: "Engagement Consistency",
+          discussed: "",
+          actionItem: "Everyone will follow it",
+          leader: "",
+          members: ["muslim", "kollol", "tafsir", "saklain", "parvez"],
+          deadline: "",
+          status: "Continuous",
+        },
+        {
+          id: "M4",
+          date: "2026-07-07",
+          agenda: "Free Content Creation",
+          discussed: "Submit idea from everyone which will be filtered by Muslim & Kollol",
+          actionItem: "",
+          leader: "muslim",
+          members: ["muslim", "kollol", "tafsir", "saklain", "parvez"],
+          deadline: "2026-07-11",
+          status: "Open",
+        },
+        {
+          id: "M5",
+          date: "2026-07-07",
+          agenda: "Apparel_Ops_Global_Launch_Plan",
+          discussed: "Put your name and comment if required for every task",
+          actionItem: "",
+          leader: "",
+          members: ["muslim", "kollol", "tafsir", "saklain", "parvez"],
+          deadline: "2026-07-09",
+          status: "Open",
+        },
+        {
+          id: "M6",
+          date: "2026-07-07",
+          agenda: "Course launch",
+          discussed: "For fresh and officer level",
+          actionItem: "",
+          leader: "",
+          members: [],
+          deadline: "2026-07-14",
+          status: "Open",
+        },
+        {
+          id: "M7",
+          date: "2026-07-07",
+          agenda: "Weekly meeting",
+          discussed: "Tuesday from 10:00 pm to 11:30 pm",
+          actionItem: "",
+          leader: "",
+          members: [],
+          deadline: "",
+          status: "Continuous",
+        },
+      ];
+
+      const SEED_LOGS = [
+        {
+          id: "L1",
+          date: "2026-07-06",
+          member: "muslim",
+          hours: 1.5,
+          uploads: 0,
+          task: "Reviewed documents from team mates, misc communication and prepared the engagement tracker.",
+          status: "Completed",
+        },
+        {
+          id: "L2",
+          date: "2026-07-07",
+          member: "muslim",
+          hours: 1.5,
+          uploads: 0,
+          task: "Common meeting",
+          status: "Completed",
+        },
+        {
+          id: "L3",
+          date: "2026-07-07",
+          member: "kollol",
+          hours: 1.5,
+          uploads: 0,
+          task: "Common meeting",
+          status: "Completed",
+        },
+        {
+          id: "L4",
+          date: "2026-07-07",
+          member: "tafsir",
+          hours: 1.5,
+          uploads: 0,
+          task: "Common meeting",
+          status: "Completed",
+        },
+        {
+          id: "L5",
+          date: "2026-07-07",
+          member: "saklain",
+          hours: 1.5,
+          uploads: 0,
+          task: "Common meeting",
+          status: "Completed",
+        },
+        {
+          id: "L6",
+          date: "2026-07-07",
+          member: "parvez",
+          hours: 1.5,
+          uploads: 0,
+          task: "Common meeting",
+          status: "Completed",
+        },
+        {
+          id: "L7",
+          date: "2026-07-08",
+          member: "muslim",
+          hours: 0.5,
+          uploads: 1,
+          task: "Uploading content in The SmartIE Edge, YT, FB, LI, WA",
+          status: "In Progress",
+        },
+        {
+          id: "L8",
+          date: "2026-07-08",
+          member: "tafsir",
+          hours: 1,
+          uploads: 0,
+          task: "Online platform selection analysis for live classes",
+          status: "Completed",
+        },
+        {
+          id: "L9",
+          date: "2026-07-08",
+          member: "tafsir",
+          hours: 1.5,
+          uploads: 0,
+          task: "Brainstorm & try to create a course outline for online posting",
+          status: "Completed",
+        },
+      ];
+    </script>
+    <script>
+      // ============ STATE MANAGEMENT ============
+      // Everything persists to localStorage so the team's edits survive reloads,
+      // without needing any backend — this is what lets the whole thing live as
+      // a static GitHub Pages site.
+
+      const STORAGE_KEY = "aog_hub_v1";
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {
+          console.warn("Could not read saved data, starting fresh.", e);
+        }
+        return {
+          members: SEED_MEMBERS,
+          phases: SEED_PHASES,
+          tasks: SEED_TASKS,
+          meetings: SEED_MEETINGS,
+          logs: SEED_LOGS,
+        };
+      }
+
+      function saveState() {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            members: STATE.members,
+            phases: STATE.phases,
+            tasks: STATE.tasks,
+            meetings: STATE.meetings,
+            logs: STATE.logs,
+          }),
+        );
+        showToast("Saved");
+        if (typeof window.pushStateToFirestore === "function") {
+          window.pushStateToFirestore(STATE);
+        }
+      }
+
+      let STATE = loadState();
+      window.STATE = STATE;
+
+      let UI = {
+        route: "dashboard", // dashboard | tasks | gantt | meetings | logs | team
+        taskSearch: "",
+        taskPhaseFilter: "all",
+        taskStatusFilter: "all",
+        taskOwnerFilter: "all",
+        collapsedPhases: {},
+        mobileNavOpen: false,
+      };
+
+      // ============ HELPERS ============
+
+      function uid(prefix) {
+        return prefix + Math.random().toString(36).slice(2, 8);
+      }
+
+      function getMember(id) {
+        return STATE.members.find((m) => m.id === id);
+      }
+
+      function memberName(id) {
+        const m = getMember(id);
+        return m ? m.name : id || "—";
+      }
+
+      function statusClass(status) {
+        return (
+          "status-" +
+          String(status || "notstarted")
+            .toLowerCase()
+            .replace(/\s+/g, "")
+        );
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso + "T00:00:00");
+        if (isNaN(d)) return iso;
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      }
+
+      function fmtDateFull(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso + "T00:00:00");
+        if (isNaN(d)) return iso;
+        return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      }
+
+      function daysBetween(a, b) {
+        const d1 = new Date(a + "T00:00:00");
+        const d2 = new Date(b + "T00:00:00");
+        return Math.round((d2 - d1) / 86400000);
+      }
+
+      function escapeHtml(str) {
+        if (str == null) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function avatarEl(memberId, size) {
+        const m = getMember(memberId);
+        if (!m) return "";
+        const cls = size === "lg" ? "avatar avatar-lg" : "avatar";
+        return `<span class="${cls}" style="background:${m.color}" title="${escapeHtml(m.name)}">${m.initials}</span>`;
+      }
+
+      function avatarStack(memberIds) {
+        if (!memberIds || !memberIds.length)
+          return `<span style="font-family:var(--font-mono);font-size:10.5px;color:var(--line-strong)">unassigned</span>`;
+        return `<span class="avatar-stack">${memberIds.map((id) => avatarEl(id)).join("")}</span>`;
+      }
+
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        if (!el) return;
+        el.innerHTML = `<span class="dot"></span> ${escapeHtml(msg)}`;
+        el.style.display = "flex";
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          el.style.display = "none";
+        }, 2200);
+      }
+
+      function getPhase(id) {
+        return STATE.phases.find((p) => p.id === id);
+      }
+
+      // Task progress heuristic for phase progress bars
+      function phaseProgress(phaseId) {
+        const tasks = STATE.tasks.filter((t) => t.phase === phaseId);
+        if (!tasks.length) return 0;
+        const weight = { Done: 1, Ongoing: 0.5, "Not Started": 0, Blocked: 0 };
+        const sum = tasks.reduce((acc, t) => acc + (weight[t.status] ?? 0), 0);
+        return Math.round((sum / tasks.length) * 100);
+      }
+
+      function overallStats() {
+        const total = STATE.tasks.length;
+        const done = STATE.tasks.filter((t) => t.status === "Done").length;
+        const ongoing = STATE.tasks.filter((t) => t.status === "Ongoing").length;
+        const notStarted = STATE.tasks.filter((t) => t.status === "Not Started").length;
+        const openActions = STATE.meetings.filter((m) => m.status === "Open").length;
+        const totalHours = STATE.logs.reduce((a, l) => a + (Number(l.hours) || 0), 0);
+        return { total, done, ongoing, notStarted, openActions, totalHours };
+      }
+    </script>
+    <script>
+      // ============ ICONS (inline SVG, stroke-based, consistent 1.5px weight) ============
+
+      const ICONS = {
+        dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>`,
+        tasks: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`,
+        gantt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h9M4 12h13M4 18h6"/></svg>`,
+        meetings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3v3M16 3v3M4 9h16"/><rect x="3" y="5" width="18" height="16" rx="2"/></svg>`,
+        logs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 7v5l3 3"/><circle cx="12" cy="12" r="9"/></svg>`,
+        team: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6M17 6.5a3 3 0 010 6M22 20c0-2.6-1.8-4.8-4.3-5.6"/></svg>`,
+        plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
+        search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
+        chevron: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`,
+        close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>`,
+        download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v13m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>`,
+        upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 16V3m0 0l-4 4m4-4l4 4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>`,
+        reset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 16v-4h4"/></svg>`,
+        clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+        film: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M8 4v16M16 4v16M3 9h5M16 9h5M3 15h5M16 15h5"/></svg>`,
+        spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/></svg>`,
+        empty: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 12h18"/></svg>`,
+        menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`,
+        trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>`,
+      };
+
+      const NAV_ITEMS = [
+        { key: "dashboard", label: "Dashboard", icon: "dashboard" },
+        { key: "tasks", label: "Task Board", icon: "tasks" },
+        { key: "gantt", label: "Timeline", icon: "gantt" },
+        { key: "meetings", label: "Meetings", icon: "meetings" },
+        { key: "logs", label: "Activity Log", icon: "logs" },
+        { key: "team", label: "Team", icon: "team" },
+      ];
+
+      // ============ ROOT RENDER ============
+
+      function render() {
+        const root = document.getElementById("root");
+        root.innerHTML = `
     <div class="mobile-topbar">
       <button class="mobile-menu-btn" onclick="toggleMobileNav()">${ICONS.menu}</button>
       <div class="brand-text" style="align-items:center">
@@ -1151,12 +2196,12 @@ function render() {
     <div id="toast" class="toast" style="display:none"></div>
     <div id="modal-root"></div>
   `;
-}
+      }
 
-function renderSidebar() {
-  const stats = overallStats();
-  return `
-    <aside class="sidebar ${UI.mobileNavOpen ? 'open' : ''}">
+      function renderSidebar() {
+        const stats = overallStats();
+        return `
+    <aside class="sidebar ${UI.mobileNavOpen ? "open" : ""}">
       <div class="brand">
         <div class="brand-mark">AO</div>
         <div class="brand-text">
@@ -1167,74 +2212,85 @@ function renderSidebar() {
 
       <div class="nav-group">
         <span class="nav-label">Workspace</span>
-        ${NAV_ITEMS.map(item => `
-          <button class="nav-item ${UI.route === item.key ? 'active' : ''}" onclick="navigate('${item.key}')">
+        ${NAV_ITEMS.map(
+          (item) => `
+          <button class="nav-item ${UI.route === item.key ? "active" : ""}" onclick="navigate('${item.key}')">
             <span class="nav-icon">${ICONS[item.icon]}</span>
             <span>${item.label}</span>
             ${navCount(item.key, stats)}
           </button>
-        `).join("")}
+        `,
+        ).join("")}
       </div>
 
       <div class="sidebar-footer">
         <div class="data-status">
-          <span class="dot" style="background: ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.color : 'var(--spool)'}"></span>
-          ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.text : 'Saved to this browser'}
+          <span class="dot" style="background: ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.color : "var(--spool)"}"></span>
+          ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.text : "Saved to this browser"}
         </div>
         <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
       </div>
     </aside>
   `;
-}
+      }
 
-function navCount(key, stats) {
-  const map = {
-    tasks: stats.total,
-    meetings: STATE.meetings.length,
-    logs: STATE.logs.length,
-    team: STATE.members.length,
-  };
-  if (!(key in map)) return "";
-  return `<span class="nav-count">${map[key]}</span>`;
-}
+      function navCount(key, stats) {
+        const map = {
+          tasks: stats.total,
+          meetings: STATE.meetings.length,
+          logs: STATE.logs.length,
+          team: STATE.members.length,
+        };
+        if (!(key in map)) return "";
+        return `<span class="nav-count">${map[key]}</span>`;
+      }
 
-function renderRoute() {
-  switch (UI.route) {
-    case "dashboard": return renderDashboard();
-    case "tasks": return renderTasksView();
-    case "gantt": return renderGanttView();
-    case "meetings": return renderMeetingsView();
-    case "logs": return renderLogsView();
-    case "team": return renderTeamView();
-    default: return renderDashboard();
-  }
-}
+      function renderRoute() {
+        switch (UI.route) {
+          case "dashboard":
+            return renderDashboard();
+          case "tasks":
+            return renderTasksView();
+          case "gantt":
+            return renderGanttView();
+          case "meetings":
+            return renderMeetingsView();
+          case "logs":
+            return renderLogsView();
+          case "team":
+            return renderTeamView();
+          default:
+            return renderDashboard();
+        }
+      }
 
-function navigate(route) {
-  UI.route = route;
-  UI.mobileNavOpen = false;
-  render();
-  window.scrollTo(0, 0);
-}
+      function navigate(route) {
+        UI.route = route;
+        UI.mobileNavOpen = false;
+        render();
+        window.scrollTo(0, 0);
+      }
 
-function toggleMobileNav() {
-  UI.mobileNavOpen = !UI.mobileNavOpen;
-  render();
-}
+      function toggleMobileNav() {
+        UI.mobileNavOpen = !UI.mobileNavOpen;
+        render();
+      }
 
-// ============ DASHBOARD ============
+      // ============ DASHBOARD ============
 
-function renderDashboard() {
-  const stats = overallStats();
-  const pctDone = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
-  const upcoming = [...STATE.tasks]
-    .filter(t => t.status !== "Done")
-    .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .slice(0, 5);
-  const recentLogs = [...STATE.logs].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
-  const openActions = STATE.meetings.filter(m => m.status === "Open").slice(0, 4);
+      function renderDashboard() {
+        const stats = overallStats();
+        const pctDone = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+        const upcoming = [...STATE.tasks]
+          .filter((t) => t.status !== "Done")
+          .sort((a, b) => new Date(a.start) - new Date(b.start))
+          .slice(0, 5);
+        const recentLogs = [...STATE.logs]
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 6);
+        const openActions = STATE.meetings.filter((m) => m.status === "Open").slice(0, 4);
 
-  return `
+        return `
     <div class="page-header">
       <div>
         <span class="page-eyebrow">Course Launch — Week of ${fmtDate(todayISO())}</span>
@@ -1271,10 +2327,11 @@ function renderDashboard() {
           Phase progress
         </h3>
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
-          ${STATE.phases.map(p => {
-            const pct = phaseProgress(p.id);
-            const count = STATE.tasks.filter(t => t.phase === p.id).length;
-            return `
+          ${STATE.phases
+            .map((p) => {
+              const pct = phaseProgress(p.id);
+              const count = STATE.tasks.filter((t) => t.phase === p.id).length;
+              return `
               <div class="phase-summary-row" onclick="navigateToPhase(${p.id})" role="button" tabindex="0">
                 <span class="phase-tab" style="background:${p.color}">P${p.id}</span>
                 <span class="phase-summary-name">${escapeHtml(p.name.replace(/^Phase \d+: /, ""))}</span>
@@ -1284,21 +2341,30 @@ function renderDashboard() {
                 <span class="mono phase-summary-count">${count} · ${pct}%</span>
               </div>
             `;
-          }).join("")}
+            })
+            .join("")}
         </div>
 
         <h3 style="font-size:14px; margin-bottom:12px;">Recent activity</h3>
         <div class="log-table-wrap" style="margin-bottom:8px;">
           <table class="log-table">
             <tbody>
-              ${recentLogs.length ? recentLogs.map(l => `
+              ${
+                recentLogs.length
+                  ? recentLogs
+                      .map(
+                        (l) => `
                 <tr>
                   <td class="mono" style="width:90px; color:var(--kraft); font-size:11.5px; white-space:nowrap;">${fmtDate(l.date)}</td>
                   <td style="width:120px;"><div class="log-member-cell">${avatarEl(l.member)} <span style="font-size:12.5px; font-weight:600;">${escapeHtml(memberName(l.member))}</span></div></td>
                   <td style="font-size:12.5px;">${escapeHtml(l.task)}</td>
                   <td class="mono log-hours" style="width:56px; text-align:right; font-size:12px; white-space:nowrap;">${l.hours}h</td>
                 </tr>
-              `).join("") : `<tr><td colspan="4" style="padding:20px; text-align:center; color:var(--kraft);">No activity logged yet.</td></tr>`}
+              `,
+                      )
+                      .join("")
+                  : `<tr><td colspan="4" style="padding:20px; text-align:center; color:var(--kraft);">No activity logged yet.</td></tr>`
+              }
             </tbody>
           </table>
         </div>
@@ -1307,12 +2373,16 @@ function renderDashboard() {
       <div>
         <h3 style="font-size:14px; margin-bottom:12px;">Up next</h3>
         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
-          ${upcoming.length ? upcoming.map(t => renderMiniTaskRow(t)).join("") : emptyInline("Nothing scheduled.")}
+          ${upcoming.length ? upcoming.map((t) => renderMiniTaskRow(t)).join("") : emptyInline("Nothing scheduled.")}
         </div>
 
         <h3 style="font-size:14px; margin-bottom:12px;">Open action items</h3>
         <div style="display:flex; flex-direction:column; gap:8px;">
-          ${openActions.length ? openActions.map(m => `
+          ${
+            openActions.length
+              ? openActions
+                  .map(
+                    (m) => `
             <div class="ticket" style="cursor:pointer;" onclick="openMeetingDetail('${m.id}')">
               <div class="ticket-title" style="margin-bottom:6px;">${escapeHtml(m.actionItem || m.agenda)}</div>
               <div class="ticket-meta-row">
@@ -1320,7 +2390,11 @@ function renderDashboard() {
                 ${m.leader ? avatarEl(m.leader) : ""}
               </div>
             </div>
-          `).join("") : emptyInline("No open action items — nice.")}
+          `,
+                  )
+                  .join("")
+              : emptyInline("No open action items — nice.")
+          }
         </div>
       </div>
     </div>
@@ -1329,14 +2403,14 @@ function renderDashboard() {
       @media (max-width: 860px) { .dash-cols { grid-template-columns: 1fr !important; } }
     </style>
   `;
-}
+      }
 
-function renderMiniTaskRow(t) {
-  const phase = getPhase(t.phase);
-  return `
+      function renderMiniTaskRow(t) {
+        const phase = getPhase(t.phase);
+        return `
     <div class="ticket" onclick="openTaskDetail('${t.id}')">
       <div class="ticket-top">
-        <span class="phase-tab" style="background:${phase ? phase.color : '#999'}">${phase ? phase.name.match(/Phase (\d)/)[1] : ""}</span>
+        <span class="phase-tab" style="background:${phase ? phase.color : "#999"}">${phase ? phase.name.match(/Phase (\d)/)[1] : ""}</span>
         <span class="status-chip ${statusClass(t.status)}"><span class="dot"></span>${t.status}</span>
       </div>
       <div class="ticket-title">${escapeHtml(t.title)}</div>
@@ -1346,46 +2420,49 @@ function renderMiniTaskRow(t) {
       </div>
     </div>
   `;
-}
+      }
 
-function emptyInline(msg) {
-  return `<div style="padding:16px; text-align:center; color:var(--kraft); font-size:12.5px; border:1.5px dashed var(--line-strong); border-radius:3px;">${escapeHtml(msg)}</div>`;
-}
+      function emptyInline(msg) {
+        return `<div style="padding:16px; text-align:center; color:var(--kraft); font-size:12.5px; border:1.5px dashed var(--line-strong); border-radius:3px;">${escapeHtml(msg)}</div>`;
+      }
 
-function navigateToPhase(phaseId) {
-  UI.route = "tasks";
-  UI.taskPhaseFilter = String(phaseId);
-  render();
-}
+      function navigateToPhase(phaseId) {
+        UI.route = "tasks";
+        UI.taskPhaseFilter = String(phaseId);
+        render();
+      }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
+      function todayISO() {
+        return new Date().toISOString().slice(0, 10);
+      }
+    </script>
+    <script>
+      // ============ TASKS VIEW ============
 
-</script>
-<script>
-// ============ TASKS VIEW ============
+      function filteredTasks() {
+        return STATE.tasks.filter((t) => {
+          if (UI.taskPhaseFilter !== "all" && String(t.phase) !== UI.taskPhaseFilter) return false;
+          if (UI.taskStatusFilter !== "all" && t.status !== UI.taskStatusFilter) return false;
+          if (UI.taskOwnerFilter !== "all" && !(t.collaborators || []).includes(UI.taskOwnerFilter))
+            return false;
+          if (UI.taskSearch) {
+            const q = UI.taskSearch.toLowerCase();
+            if (!t.title.toLowerCase().includes(q) && !t.owner.toLowerCase().includes(q))
+              return false;
+          }
+          return true;
+        });
+      }
 
-function filteredTasks() {
-  return STATE.tasks.filter(t => {
-    if (UI.taskPhaseFilter !== "all" && String(t.phase) !== UI.taskPhaseFilter) return false;
-    if (UI.taskStatusFilter !== "all" && t.status !== UI.taskStatusFilter) return false;
-    if (UI.taskOwnerFilter !== "all" && !(t.collaborators || []).includes(UI.taskOwnerFilter)) return false;
-    if (UI.taskSearch) {
-      const q = UI.taskSearch.toLowerCase();
-      if (!t.title.toLowerCase().includes(q) && !t.owner.toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
-}
+      function renderTasksView() {
+        const tasks = filteredTasks();
+        const grouped = {};
+        STATE.phases.forEach((p) => (grouped[p.id] = []));
+        tasks.forEach((t) => {
+          if (grouped[t.phase]) grouped[t.phase].push(t);
+        });
 
-function renderTasksView() {
-  const tasks = filteredTasks();
-  const grouped = {};
-  STATE.phases.forEach(p => grouped[p.id] = []);
-  tasks.forEach(t => { if (grouped[t.phase]) grouped[t.phase].push(t); });
-
-  return `
+        return `
     <div class="page-header">
       <div>
         <span class="page-eyebrow">Launch Plan</span>
@@ -1403,49 +2480,67 @@ function renderTasksView() {
         <input type="text" placeholder="Search tasks…" value="${escapeHtml(UI.taskSearch)}" oninput="updateTaskFilter('taskSearch', this.value)">
       </div>
       <select class="filter-select" onchange="updateTaskFilter('taskPhaseFilter', this.value)">
-        <option value="all" ${UI.taskPhaseFilter === 'all' ? 'selected' : ''}>All phases</option>
-        ${STATE.phases.map(p => `<option value="${p.id}" ${UI.taskPhaseFilter === String(p.id) ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join("")}
+        <option value="all" ${UI.taskPhaseFilter === "all" ? "selected" : ""}>All phases</option>
+        ${STATE.phases.map((p) => `<option value="${p.id}" ${UI.taskPhaseFilter === String(p.id) ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
       </select>
       <select class="filter-select" onchange="updateTaskFilter('taskStatusFilter', this.value)">
-        <option value="all" ${UI.taskStatusFilter === 'all' ? 'selected' : ''}>All statuses</option>
-        ${["Not Started","Ongoing","Done","Blocked"].map(s => `<option value="${s}" ${UI.taskStatusFilter === s ? 'selected' : ''}>${s}</option>`).join("")}
+        <option value="all" ${UI.taskStatusFilter === "all" ? "selected" : ""}>All statuses</option>
+        ${["Not Started", "Ongoing", "Done", "Blocked"].map((s) => `<option value="${s}" ${UI.taskStatusFilter === s ? "selected" : ""}>${s}</option>`).join("")}
       </select>
       <select class="filter-select" onchange="updateTaskFilter('taskOwnerFilter', this.value)">
-        <option value="all" ${UI.taskOwnerFilter === 'all' ? 'selected' : ''}>Everyone</option>
-        ${STATE.members.map(m => `<option value="${m.id}" ${UI.taskOwnerFilter === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join("")}
+        <option value="all" ${UI.taskOwnerFilter === "all" ? "selected" : ""}>Everyone</option>
+        ${STATE.members.map((m) => `<option value="${m.id}" ${UI.taskOwnerFilter === m.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("")}
       </select>
       <div class="spacer"></div>
       <span class="mono" style="font-size:11.5px; color:var(--kraft)">${tasks.length} of ${STATE.tasks.length} tasks</span>
     </div>
 
-    ${tasks.length === 0 ? renderEmptyTasks() : STATE.phases.map(p => renderPhaseBlock(p, grouped[p.id])).filter(Boolean).join("")}
+    ${
+      tasks.length === 0
+        ? renderEmptyTasks()
+        : STATE.phases
+            .map((p) => renderPhaseBlock(p, grouped[p.id]))
+            .filter(Boolean)
+            .join("")
+    }
   `;
-}
+      }
 
-function renderPhaseBlock(phase, tasks) {
-  if (!tasks.length && (UI.taskSearch || UI.taskStatusFilter !== "all" || UI.taskOwnerFilter !== "all" || (UI.taskPhaseFilter !== "all" && UI.taskPhaseFilter !== String(phase.id)))) return "";
-  const collapsed = UI.collapsedPhases[phase.id];
-  const pct = phaseProgress(phase.id);
-  return `
+      function renderPhaseBlock(phase, tasks) {
+        if (
+          !tasks.length &&
+          (UI.taskSearch ||
+            UI.taskStatusFilter !== "all" ||
+            UI.taskOwnerFilter !== "all" ||
+            (UI.taskPhaseFilter !== "all" && UI.taskPhaseFilter !== String(phase.id)))
+        )
+          return "";
+        const collapsed = UI.collapsedPhases[phase.id];
+        const pct = phaseProgress(phase.id);
+        return `
     <div class="phase-block">
       <div class="phase-head" onclick="togglePhase(${phase.id})">
-        <svg class="phase-chevron ${collapsed ? 'collapsed' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        <svg class="phase-chevron ${collapsed ? "collapsed" : ""}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         <span class="phase-tab" style="background:${phase.color}">P${phase.id}</span>
         <span class="phase-title-text">${escapeHtml(phase.name.replace(/^Phase \d+: /, ""))}</span>
         <div class="phase-progress-bar"><div class="phase-progress-fill" style="width:${pct}%; background:${phase.color}"></div></div>
         <span class="phase-count">${tasks.length} · ${pct}%</span>
       </div>
-      ${!collapsed ? `
+      ${
+        !collapsed
+          ? `
         <div class="task-grid">
           ${tasks.length ? tasks.map(renderTicketCard).join("") : emptyInline("No tasks in this phase.")}
         </div>
-      ` : ""}
+      `
+          : ""
+      }
     </div>
   `;
-}
+      }
 
-function renderTicketCard(t) {
-  return `
+      function renderTicketCard(t) {
+        return `
     <div class="ticket" onclick="openTaskDetail('${t.id}')" role="button" tabindex="0">
       <div class="ticket-top">
         <span class="ticket-id mono">${t.id} · ${escapeHtml(t.owner)}</span>
@@ -1459,10 +2554,10 @@ function renderTicketCard(t) {
       <div class="ticket-tearline"></div>
     </div>
   `;
-}
+      }
 
-function renderEmptyTasks() {
-  return `
+      function renderEmptyTasks() {
+        return `
     <div class="empty-state">
       ${ICONS.empty}
       <div class="empty-state-title">No tasks match your filters</div>
@@ -1470,32 +2565,32 @@ function renderEmptyTasks() {
       <button class="btn btn-subtle" onclick="clearTaskFilters()">Clear filters</button>
     </div>
   `;
-}
+      }
 
-function updateTaskFilter(key, value) {
-  UI[key] = value;
-  render();
-}
+      function updateTaskFilter(key, value) {
+        UI[key] = value;
+        render();
+      }
 
-function clearTaskFilters() {
-  UI.taskSearch = "";
-  UI.taskPhaseFilter = "all";
-  UI.taskStatusFilter = "all";
-  UI.taskOwnerFilter = "all";
-  render();
-}
+      function clearTaskFilters() {
+        UI.taskSearch = "";
+        UI.taskPhaseFilter = "all";
+        UI.taskStatusFilter = "all";
+        UI.taskOwnerFilter = "all";
+        render();
+      }
 
-function togglePhase(phaseId) {
-  UI.collapsedPhases[phaseId] = !UI.collapsedPhases[phaseId];
-  render();
-}
+      function togglePhase(phaseId) {
+        UI.collapsedPhases[phaseId] = !UI.collapsedPhases[phaseId];
+        render();
+      }
 
-// ============ TASK MODAL (create / edit) ============
+      // ============ TASK MODAL (create / edit) ============
 
-function openTaskModal(taskId) {
-  const editing = taskId ? STATE.tasks.find(t => t.id === taskId) : null;
-  const modalRoot = document.getElementById("modal-root");
-  modalRoot.innerHTML = `
+      function openTaskModal(taskId) {
+        const editing = taskId ? STATE.tasks.find((t) => t.id === taskId) : null;
+        const modalRoot = document.getElementById("modal-root");
+        modalRoot.innerHTML = `
     <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
         <div class="modal-head">
@@ -1511,7 +2606,7 @@ function openTaskModal(taskId) {
             <div class="field">
               <label class="field-label">Phase</label>
               <select id="f-phase">
-                ${STATE.phases.map(p => `<option value="${p.id}" ${editing && editing.phase === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join("")}
+                ${STATE.phases.map((p) => `<option value="${p.id}" ${editing && editing.phase === p.id ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
               </select>
             </div>
             <div class="field">
@@ -1532,76 +2627,95 @@ function openTaskModal(taskId) {
           <div class="field">
             <label class="field-label">Status</label>
             <select id="f-status">
-              ${["Not Started","Ongoing","Done","Blocked"].map(s => `<option value="${s}" ${editing && editing.status === s ? 'selected' : ''}>${s}</option>`).join("")}
+              ${["Not Started", "Ongoing", "Done", "Blocked"].map((s) => `<option value="${s}" ${editing && editing.status === s ? "selected" : ""}>${s}</option>`).join("")}
             </select>
           </div>
           <div class="field">
             <label class="field-label">Assign team members</label>
             <div class="chip-select" id="f-collab">
-              ${STATE.members.map(m => `
-                <span class="chip-option ${editing && (editing.collaborators||[]).includes(m.id) ? 'selected' : ''}" data-member="${m.id}" onclick="toggleChip(this)">
+              ${STATE.members
+                .map(
+                  (m) => `
+                <span class="chip-option ${editing && (editing.collaborators || []).includes(m.id) ? "selected" : ""}" data-member="${m.id}" onclick="toggleChip(this)">
                   <span class="avatar" style="background:${m.color}">${m.initials}</span>${escapeHtml(m.name)}
                 </span>
-              `).join("")}
+              `,
+                )
+                .join("")}
             </div>
           </div>
         </div>
         <div class="modal-foot">
           ${editing ? `<button class="btn btn-danger-text" style="margin-right:auto" onclick="deleteTask('${editing.id}')">${ICONS.trash} Delete task</button>` : ""}
           <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveTask(${editing ? `'${editing.id}'` : 'null'})">${editing ? "Save changes" : "Create task"}</button>
+          <button class="btn btn-primary" onclick="saveTask(${editing ? `'${editing.id}'` : "null"})">${editing ? "Save changes" : "Create task"}</button>
         </div>
       </div>
     </div>
   `;
-}
+      }
 
-function toggleChip(el) {
-  el.classList.toggle("selected");
-}
+      function toggleChip(el) {
+        el.classList.toggle("selected");
+      }
 
-function saveTask(taskId) {
-  const title = document.getElementById("f-title").value.trim();
-  if (!title) { showToast("Task title is required"); return; }
-  const phase = Number(document.getElementById("f-phase").value);
-  const owner = document.getElementById("f-owner").value.trim() || "Unassigned";
-  const start = document.getElementById("f-start").value;
-  const end = document.getElementById("f-end").value || start;
-  const status = document.getElementById("f-status").value;
-  const collaborators = Array.from(document.querySelectorAll("#f-collab .chip-option.selected")).map(el => el.dataset.member);
-  const duration = Math.max(1, daysBetween(start, end) + 1);
+      function saveTask(taskId) {
+        const title = document.getElementById("f-title").value.trim();
+        if (!title) {
+          showToast("Task title is required");
+          return;
+        }
+        const phase = Number(document.getElementById("f-phase").value);
+        const owner = document.getElementById("f-owner").value.trim() || "Unassigned";
+        const start = document.getElementById("f-start").value;
+        const end = document.getElementById("f-end").value || start;
+        const status = document.getElementById("f-status").value;
+        const collaborators = Array.from(
+          document.querySelectorAll("#f-collab .chip-option.selected"),
+        ).map((el) => el.dataset.member);
+        const duration = Math.max(1, daysBetween(start, end) + 1);
 
-  if (taskId) {
-    const t = STATE.tasks.find(t => t.id === taskId);
-    Object.assign(t, { title, phase, owner, start, end, status, collaborators, duration });
-  } else {
-    STATE.tasks.push({ id: uid("T"), title, phase, owner, start, end, status, collaborators, duration });
-  }
-  saveState();
-  closeModal();
-  render();
-}
+        if (taskId) {
+          const t = STATE.tasks.find((t) => t.id === taskId);
+          Object.assign(t, { title, phase, owner, start, end, status, collaborators, duration });
+        } else {
+          STATE.tasks.push({
+            id: uid("T"),
+            title,
+            phase,
+            owner,
+            start,
+            end,
+            status,
+            collaborators,
+            duration,
+          });
+        }
+        saveState();
+        closeModal();
+        render();
+      }
 
-function deleteTask(taskId) {
-  if (!confirm("Delete this task? This can't be undone.")) return;
-  STATE.tasks = STATE.tasks.filter(t => t.id !== taskId);
-  saveState();
-  closeModal();
-  render();
-}
+      function deleteTask(taskId) {
+        if (!confirm("Delete this task? This can't be undone.")) return;
+        STATE.tasks = STATE.tasks.filter((t) => t.id !== taskId);
+        saveState();
+        closeModal();
+        render();
+      }
 
-function closeModal() {
-  document.getElementById("modal-root").innerHTML = "";
-}
+      function closeModal() {
+        document.getElementById("modal-root").innerHTML = "";
+      }
 
-// ============ TASK DETAIL DRAWER ============
+      // ============ TASK DETAIL DRAWER ============
 
-function openTaskDetail(taskId) {
-  const t = STATE.tasks.find(t => t.id === taskId);
-  if (!t) return;
-  const phase = getPhase(t.phase);
-  const modalRoot = document.getElementById("modal-root");
-  modalRoot.innerHTML = `
+      function openTaskDetail(taskId) {
+        const t = STATE.tasks.find((t) => t.id === taskId);
+        if (!t) return;
+        const phase = getPhase(t.phase);
+        const modalRoot = document.getElementById("modal-root");
+        modalRoot.innerHTML = `
     <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
       <div class="modal" role="dialog" aria-modal="true">
         <div class="modal-head">
@@ -1634,11 +2748,19 @@ function openTaskDetail(taskId) {
           <div class="detail-section">
             <div class="detail-label">Assigned team members</div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
-              ${(t.collaborators||[]).length ? t.collaborators.map(id => `
+              ${
+                (t.collaborators || []).length
+                  ? t.collaborators
+                      .map(
+                        (id) => `
                 <span style="display:flex; align-items:center; gap:6px; background:var(--paper-dim); padding:5px 10px 5px 5px; border-radius:20px; font-size:12.5px; font-weight:500;">
                   ${avatarEl(id)} ${escapeHtml(memberName(id))}
                 </span>
-              `).join("") : `<span style="color:var(--kraft); font-size:13px;">No one assigned yet</span>`}
+              `,
+                      )
+                      .join("")
+                  : `<span style="color:var(--kraft); font-size:13px;">No one assigned yet</span>`
+              }
             </div>
           </div>
         </div>
@@ -1649,45 +2771,46 @@ function openTaskDetail(taskId) {
       </div>
     </div>
   `;
-}
+      }
+    </script>
+    <script>
+      // ============ GANTT / TIMELINE VIEW ============
+      // Renders real week columns computed from the actual task date range,
+      // with bars positioned by percentage — not the static/manual columns
+      // from the original spreadsheet.
 
-</script>
-<script>
-// ============ GANTT / TIMELINE VIEW ============
-// Renders real week columns computed from the actual task date range,
-// with bars positioned by percentage — not the static/manual columns
-// from the original spreadsheet.
-
-function renderGanttView() {
-  if (!STATE.tasks.length) {
-    return `
+      function renderGanttView() {
+        if (!STATE.tasks.length) {
+          return `
       <div class="page-header">
         <div><span class="page-eyebrow">Launch Plan</span><h1 class="page-title">Timeline</h1></div>
       </div>
       <div class="empty-state">${ICONS.empty}<div class="empty-state-title">No tasks yet</div><div class="empty-state-desc">Add tasks from the Task Board to see them on the timeline.</div></div>
     `;
-  }
+        }
 
-  const allStarts = STATE.tasks.map(t => new Date(t.start + "T00:00:00"));
-  const allEnds = STATE.tasks.map(t => new Date(t.end + "T00:00:00"));
-  let rangeStart = new Date(Math.min(...allStarts));
-  let rangeEnd = new Date(Math.max(...allEnds));
+        const allStarts = STATE.tasks.map((t) => new Date(t.start + "T00:00:00"));
+        const allEnds = STATE.tasks.map((t) => new Date(t.end + "T00:00:00"));
+        let rangeStart = new Date(Math.min(...allStarts));
+        let rangeEnd = new Date(Math.max(...allEnds));
 
-  // Snap range start to the Monday of that week for clean columns
-  rangeStart = mondayOf(rangeStart);
-  rangeEnd = new Date(rangeEnd.getTime() + 7 * 86400000);
+        // Snap range start to the Monday of that week for clean columns
+        rangeStart = mondayOf(rangeStart);
+        rangeEnd = new Date(rangeEnd.getTime() + 7 * 86400000);
 
-  const totalDays = Math.round((rangeEnd - rangeStart) / 86400000);
-  const weeks = [];
-  let cursor = new Date(rangeStart);
-  while (cursor < rangeEnd) {
-    weeks.push(new Date(cursor));
-    cursor = new Date(cursor.getTime() + 7 * 86400000);
-  }
+        const totalDays = Math.round((rangeEnd - rangeStart) / 86400000);
+        const weeks = [];
+        let cursor = new Date(rangeStart);
+        while (cursor < rangeEnd) {
+          weeks.push(new Date(cursor));
+          cursor = new Date(cursor.getTime() + 7 * 86400000);
+        }
 
-  const sortedTasks = [...STATE.tasks].sort((a, b) => new Date(a.start) - new Date(b.start) || a.phase - b.phase);
+        const sortedTasks = [...STATE.tasks].sort(
+          (a, b) => new Date(a.start) - new Date(b.start) || a.phase - b.phase,
+        );
 
-  return `
+        return `
     <div class="page-header">
       <div>
         <span class="page-eyebrow">Launch Plan</span>
@@ -1697,12 +2820,16 @@ function renderGanttView() {
     </div>
 
     <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px;">
-      ${STATE.phases.map(p => `
+      ${STATE.phases
+        .map(
+          (p) => `
         <span style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft);">
           <span style="width:9px; height:9px; border-radius:2px; background:${p.color}; display:inline-block;"></span>
           ${escapeHtml(p.name.replace(/^Phase \d+: /, ""))}
         </span>
-      `).join("")}
+      `,
+        )
+        .join("")}
     </div>
 
     <div class="gantt-wrap">
@@ -1710,56 +2837,57 @@ function renderGanttView() {
         <div class="gantt-row head">
           <div class="gantt-label">Task</div>
           <div class="gantt-track">
-            ${weeks.map(w => `<div class="gantt-week-label">${w.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>`).join("")}
+            ${weeks.map((w) => `<div class="gantt-week-label">${w.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>`).join("")}
           </div>
         </div>
-        ${sortedTasks.map(t => renderGanttRow(t, rangeStart, totalDays, weeks.length)).join("")}
+        ${sortedTasks.map((t) => renderGanttRow(t, rangeStart, totalDays, weeks.length)).join("")}
       </div>
     </div>
   `;
-}
+      }
 
-function mondayOf(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = (day === 0 ? -6 : 1) - day;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
+      function mondayOf(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = (day === 0 ? -6 : 1) - day;
+        d.setDate(d.getDate() + diff);
+        return d;
+      }
 
-function renderGanttRow(t, rangeStart, totalDays, weekCount) {
-  const phase = getPhase(t.phase);
-  const taskStart = new Date(t.start + "T00:00:00");
-  const taskEnd = new Date(t.end + "T00:00:00");
-  const offsetDays = Math.round((taskStart - rangeStart) / 86400000);
-  const durationDays = Math.max(1, Math.round((taskEnd - taskStart) / 86400000) + 1);
+      function renderGanttRow(t, rangeStart, totalDays, weekCount) {
+        const phase = getPhase(t.phase);
+        const taskStart = new Date(t.start + "T00:00:00");
+        const taskEnd = new Date(t.end + "T00:00:00");
+        const offsetDays = Math.round((taskStart - rangeStart) / 86400000);
+        const durationDays = Math.max(1, Math.round((taskEnd - taskStart) / 86400000) + 1);
 
-  const leftPct = (offsetDays / totalDays) * 100;
-  const widthPct = Math.max((durationDays / totalDays) * 100, 1.2);
+        const leftPct = (offsetDays / totalDays) * 100;
+        const widthPct = Math.max((durationDays / totalDays) * 100, 1.2);
 
-  return `
+        return `
     <div class="gantt-row">
       <div class="gantt-label" title="${escapeHtml(t.title)}">
         <span class="gantt-phase-dot" style="--dot-color:${phase.color}"></span>
         <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(t.title)}</span>
       </div>
       <div class="gantt-track" onclick="openTaskDetail('${t.id}')" style="cursor:pointer;">
-        <div class="gantt-bar-bg">${Array.from({length: weekCount}).map(() => '<div class="gantt-week-col"></div>').join("")}</div>
+        <div class="gantt-bar-bg">${Array.from({ length: weekCount })
+          .map(() => '<div class="gantt-week-col"></div>')
+          .join("")}</div>
         <div class="gantt-bar thread-texture" style="left:${leftPct}%; width:${widthPct}%; --bar-color:${phase.color}; background:${phase.color}">
           ${widthPct > 6 ? `<span class="gantt-bar-label">${t.duration}d</span>` : ""}
         </div>
       </div>
     </div>
   `;
-}
+      }
+    </script>
+    <script>
+      // ============ MEETINGS VIEW ============
 
-</script>
-<script>
-// ============ MEETINGS VIEW ============
-
-function renderMeetingsView() {
-  const meetings = [...STATE.meetings].sort((a, b) => new Date(b.date) - new Date(a.date));
-  return `
+      function renderMeetingsView() {
+        const meetings = [...STATE.meetings].sort((a, b) => new Date(b.date) - new Date(a.date));
+        return `
     <div class="page-header">
       <div>
         <span class="page-eyebrow">Weekly Sync — Tuesdays 10:00–11:30 PM</span>
@@ -1771,14 +2899,18 @@ function renderMeetingsView() {
       </div>
     </div>
 
-    ${meetings.length ? meetings.map(renderMeetingCard).join("") : `
+    ${
+      meetings.length
+        ? meetings.map(renderMeetingCard).join("")
+        : `
       <div class="empty-state">${ICONS.empty}<div class="empty-state-title">No meetings logged</div><div class="empty-state-desc">Log your first agenda item or action from a team sync.</div><button class="btn btn-subtle" onclick="openMeetingModal()">Log meeting item</button></div>
-    `}
+    `
+    }
   `;
-}
+      }
 
-function renderMeetingCard(m) {
-  return `
+      function renderMeetingCard(m) {
+        return `
     <div class="meeting-card" onclick="openMeetingDetail('${m.id}')">
       <div class="meeting-top">
         <div>
@@ -1788,12 +2920,16 @@ function renderMeetingCard(m) {
         <span class="status-chip ${statusClass(m.status)}"><span class="dot"></span>${escapeHtml(m.status || "Open")}</span>
       </div>
       ${m.discussed ? `<div class="meeting-body">${escapeHtml(m.discussed)}</div>` : ""}
-      ${m.actionItem ? `
+      ${
+        m.actionItem
+          ? `
         <div class="meeting-action">
           <div class="meeting-action-label">Action item</div>
           ${escapeHtml(m.actionItem)}
         </div>
-      ` : ""}
+      `
+          : ""
+      }
       <div class="meeting-footer">
         <div class="meeting-people">
           ${m.leader ? `<span>Leader:</span> ${avatarEl(m.leader)} <span>${escapeHtml(memberName(m.leader))}</span>` : ""}
@@ -1803,12 +2939,12 @@ function renderMeetingCard(m) {
       </div>
     </div>
   `;
-}
+      }
 
-function openMeetingModal(meetingId) {
-  const editing = meetingId ? STATE.meetings.find(m => m.id === meetingId) : null;
-  const modalRoot = document.getElementById("modal-root");
-  modalRoot.innerHTML = `
+      function openMeetingModal(meetingId) {
+        const editing = meetingId ? STATE.meetings.find((m) => m.id === meetingId) : null;
+        const modalRoot = document.getElementById("modal-root");
+        modalRoot.innerHTML = `
     <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
       <div class="modal" role="dialog" aria-modal="true">
         <div class="modal-head">
@@ -1824,7 +2960,7 @@ function openMeetingModal(meetingId) {
             <div class="field">
               <label class="field-label">Status</label>
               <select id="m-status">
-                ${["Open","Continuous","Closed"].map(s => `<option value="${s}" ${editing && editing.status === s ? 'selected' : ''}>${s}</option>`).join("")}
+                ${["Open", "Continuous", "Closed"].map((s) => `<option value="${s}" ${editing && editing.status === s ? "selected" : ""}>${s}</option>`).join("")}
               </select>
             </div>
           </div>
@@ -1845,7 +2981,7 @@ function openMeetingModal(meetingId) {
               <label class="field-label">Task leader</label>
               <select id="m-leader">
                 <option value="">— none —</option>
-                ${STATE.members.map(m => `<option value="${m.id}" ${editing && editing.leader === m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>`).join("")}
+                ${STATE.members.map((m) => `<option value="${m.id}" ${editing && editing.leader === m.id ? "selected" : ""}>${escapeHtml(m.name)}</option>`).join("")}
               </select>
             </div>
             <div class="field">
@@ -1856,72 +2992,101 @@ function openMeetingModal(meetingId) {
           <div class="field">
             <label class="field-label">Team members involved</label>
             <div class="chip-select" id="m-members">
-              ${STATE.members.map(m => `
-                <span class="chip-option ${editing && (editing.members||[]).includes(m.id) ? 'selected' : ''}" data-member="${m.id}" onclick="toggleChip(this)">
+              ${STATE.members
+                .map(
+                  (m) => `
+                <span class="chip-option ${editing && (editing.members || []).includes(m.id) ? "selected" : ""}" data-member="${m.id}" onclick="toggleChip(this)">
                   <span class="avatar" style="background:${m.color}">${m.initials}</span>${escapeHtml(m.name)}
                 </span>
-              `).join("")}
+              `,
+                )
+                .join("")}
             </div>
           </div>
         </div>
         <div class="modal-foot">
           ${editing ? `<button class="btn btn-danger-text" style="margin-right:auto" onclick="deleteMeeting('${editing.id}')">${ICONS.trash} Delete</button>` : ""}
           <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveMeeting(${editing ? `'${editing.id}'` : 'null'})">${editing ? "Save changes" : "Log item"}</button>
+          <button class="btn btn-primary" onclick="saveMeeting(${editing ? `'${editing.id}'` : "null"})">${editing ? "Save changes" : "Log item"}</button>
         </div>
       </div>
     </div>
   `;
-}
+      }
 
-function saveMeeting(meetingId) {
-  const agenda = document.getElementById("m-agenda").value.trim();
-  if (!agenda) { showToast("Agenda is required"); return; }
-  const date = document.getElementById("m-date").value;
-  const status = document.getElementById("m-status").value;
-  const discussed = document.getElementById("m-discussed").value.trim();
-  const actionItem = document.getElementById("m-action").value.trim();
-  const leader = document.getElementById("m-leader").value;
-  const deadline = document.getElementById("m-deadline").value;
-  const members = Array.from(document.querySelectorAll("#m-members .chip-option.selected")).map(el => el.dataset.member);
+      function saveMeeting(meetingId) {
+        const agenda = document.getElementById("m-agenda").value.trim();
+        if (!agenda) {
+          showToast("Agenda is required");
+          return;
+        }
+        const date = document.getElementById("m-date").value;
+        const status = document.getElementById("m-status").value;
+        const discussed = document.getElementById("m-discussed").value.trim();
+        const actionItem = document.getElementById("m-action").value.trim();
+        const leader = document.getElementById("m-leader").value;
+        const deadline = document.getElementById("m-deadline").value;
+        const members = Array.from(
+          document.querySelectorAll("#m-members .chip-option.selected"),
+        ).map((el) => el.dataset.member);
 
-  if (meetingId) {
-    const m = STATE.meetings.find(m => m.id === meetingId);
-    Object.assign(m, { date, agenda, discussed, actionItem, leader, deadline, members, status });
-  } else {
-    STATE.meetings.push({ id: uid("M"), date, agenda, discussed, actionItem, leader, deadline, members, status });
-  }
-  saveState();
-  closeModal();
-  render();
-}
+        if (meetingId) {
+          const m = STATE.meetings.find((m) => m.id === meetingId);
+          Object.assign(m, {
+            date,
+            agenda,
+            discussed,
+            actionItem,
+            leader,
+            deadline,
+            members,
+            status,
+          });
+        } else {
+          STATE.meetings.push({
+            id: uid("M"),
+            date,
+            agenda,
+            discussed,
+            actionItem,
+            leader,
+            deadline,
+            members,
+            status,
+          });
+        }
+        saveState();
+        closeModal();
+        render();
+      }
 
-function deleteMeeting(meetingId) {
-  if (!confirm("Delete this meeting item?")) return;
-  STATE.meetings = STATE.meetings.filter(m => m.id !== meetingId);
-  saveState();
-  closeModal();
-  render();
-}
+      function deleteMeeting(meetingId) {
+        if (!confirm("Delete this meeting item?")) return;
+        STATE.meetings = STATE.meetings.filter((m) => m.id !== meetingId);
+        saveState();
+        closeModal();
+        render();
+      }
 
-function openMeetingDetail(meetingId) {
-  openMeetingModal(meetingId);
-}
+      function openMeetingDetail(meetingId) {
+        openMeetingModal(meetingId);
+      }
+    </script>
+    <script>
+      // ============ ACTIVITY LOG VIEW ============
 
-</script>
-<script>
-// ============ ACTIVITY LOG VIEW ============
+      function renderLogsView() {
+        const logs = [...STATE.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const byDay = {};
+        logs.forEach((l) => {
+          (byDay[l.date] = byDay[l.date] || []).push(l);
+        });
+        const days = Object.keys(byDay).sort((a, b) => new Date(b) - new Date(a));
 
-function renderLogsView() {
-  const logs = [...STATE.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const byDay = {};
-  logs.forEach(l => { (byDay[l.date] = byDay[l.date] || []).push(l); });
-  const days = Object.keys(byDay).sort((a, b) => new Date(b) - new Date(a));
+        const totalHours = logs.reduce((a, l) => a + (Number(l.hours) || 0), 0);
+        const totalUploads = logs.reduce((a, l) => a + (Number(l.uploads) || 0), 0);
 
-  const totalHours = logs.reduce((a, l) => a + (Number(l.hours) || 0), 0);
-  const totalUploads = logs.reduce((a, l) => a + (Number(l.uploads) || 0), 0);
-
-  return `
+        return `
     <div class="page-header">
       <div>
         <span class="page-eyebrow">Engagement Tracker</span>
@@ -1948,21 +3113,27 @@ function renderLogsView() {
       </div>
     </div>
 
-    ${days.length ? days.map(day => renderDayGroup(day, byDay[day])).join("") : `
+    ${
+      days.length
+        ? days.map((day) => renderDayGroup(day, byDay[day])).join("")
+        : `
       <div class="empty-state">${ICONS.empty}<div class="empty-state-title">No activity logged</div><div class="empty-state-desc">Log the first day's contributions from the team.</div><button class="btn btn-subtle" onclick="openLogModal()">Log activity</button></div>
-    `}
+    `
+    }
   `;
-}
+      }
 
-function renderDayGroup(date, entries) {
-  const dayHours = entries.reduce((a, l) => a + (Number(l.hours) || 0), 0);
-  return `
+      function renderDayGroup(date, entries) {
+        const dayHours = entries.reduce((a, l) => a + (Number(l.hours) || 0), 0);
+        return `
     <div class="day-group">
       <div class="day-group-head">
         <span class="day-group-date">${fmtDateFull(date)}</span>
         <span class="day-group-stats">${entries.length} ${entries.length === 1 ? "entry" : "entries"} · ${dayHours}h total</span>
       </div>
-      ${entries.map(l => `
+      ${entries
+        .map(
+          (l) => `
         <div class="log-entry" onclick="openLogModal('${l.id}')" style="cursor:pointer;">
           ${avatarEl(l.member)}
           <div class="log-entry-body">
@@ -1974,15 +3145,17 @@ function renderDayGroup(date, entries) {
             <div class="log-entry-meta">${l.hours}h logged${l.uploads ? ` · ${l.uploads} upload${l.uploads !== 1 ? "s" : ""}` : ""}</div>
           </div>
         </div>
-      `).join("")}
+      `,
+        )
+        .join("")}
     </div>
   `;
-}
+      }
 
-function openLogModal(logId) {
-  const editing = logId ? STATE.logs.find(l => l.id === logId) : null;
-  const modalRoot = document.getElementById("modal-root");
-  modalRoot.innerHTML = `
+      function openLogModal(logId) {
+        const editing = logId ? STATE.logs.find((l) => l.id === logId) : null;
+        const modalRoot = document.getElementById("modal-root");
+        modalRoot.innerHTML = `
     <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
       <div class="modal" role="dialog" aria-modal="true">
         <div class="modal-head">
@@ -1998,7 +3171,7 @@ function openLogModal(logId) {
             <div class="field">
               <label class="field-label">Team member</label>
               <select id="l-member">
-                ${STATE.members.map(m => `<option value="${m.id}" ${editing ? (editing.member === m.id ? 'selected' : '') : ''}>${escapeHtml(m.name)}</option>`).join("")}
+                ${STATE.members.map((m) => `<option value="${m.id}" ${editing ? (editing.member === m.id ? "selected" : "") : ""}>${escapeHtml(m.name)}</option>`).join("")}
               </select>
             </div>
           </div>
@@ -2019,52 +3192,55 @@ function openLogModal(logId) {
           <div class="field">
             <label class="field-label">Status</label>
             <select id="l-status">
-              ${["Completed","In Progress","Blocked"].map(s => `<option value="${s}" ${editing && editing.status === s ? 'selected' : ''}>${s}</option>`).join("")}
+              ${["Completed", "In Progress", "Blocked"].map((s) => `<option value="${s}" ${editing && editing.status === s ? "selected" : ""}>${s}</option>`).join("")}
             </select>
           </div>
         </div>
         <div class="modal-foot">
           ${editing ? `<button class="btn btn-danger-text" style="margin-right:auto" onclick="deleteLog('${editing.id}')">${ICONS.trash} Delete</button>` : ""}
           <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveLog(${editing ? `'${editing.id}'` : 'null'})">${editing ? "Save changes" : "Log activity"}</button>
+          <button class="btn btn-primary" onclick="saveLog(${editing ? `'${editing.id}'` : "null"})">${editing ? "Save changes" : "Log activity"}</button>
         </div>
       </div>
     </div>
   `;
-}
+      }
 
-function saveLog(logId) {
-  const task = document.getElementById("l-task").value.trim();
-  if (!task) { showToast("Task description is required"); return; }
-  const date = document.getElementById("l-date").value;
-  const member = document.getElementById("l-member").value;
-  const hours = Number(document.getElementById("l-hours").value) || 0;
-  const uploads = Number(document.getElementById("l-uploads").value) || 0;
-  const status = document.getElementById("l-status").value;
+      function saveLog(logId) {
+        const task = document.getElementById("l-task").value.trim();
+        if (!task) {
+          showToast("Task description is required");
+          return;
+        }
+        const date = document.getElementById("l-date").value;
+        const member = document.getElementById("l-member").value;
+        const hours = Number(document.getElementById("l-hours").value) || 0;
+        const uploads = Number(document.getElementById("l-uploads").value) || 0;
+        const status = document.getElementById("l-status").value;
 
-  if (logId) {
-    const l = STATE.logs.find(l => l.id === logId);
-    Object.assign(l, { date, member, task, hours, uploads, status });
-  } else {
-    STATE.logs.push({ id: uid("L"), date, member, task, hours, uploads, status });
-  }
-  saveState();
-  closeModal();
-  render();
-}
+        if (logId) {
+          const l = STATE.logs.find((l) => l.id === logId);
+          Object.assign(l, { date, member, task, hours, uploads, status });
+        } else {
+          STATE.logs.push({ id: uid("L"), date, member, task, hours, uploads, status });
+        }
+        saveState();
+        closeModal();
+        render();
+      }
 
-function deleteLog(logId) {
-  if (!confirm("Delete this log entry?")) return;
-  STATE.logs = STATE.logs.filter(l => l.id !== logId);
-  saveState();
-  closeModal();
-  render();
-}
+      function deleteLog(logId) {
+        if (!confirm("Delete this log entry?")) return;
+        STATE.logs = STATE.logs.filter((l) => l.id !== logId);
+        saveState();
+        closeModal();
+        render();
+      }
 
-// ============ TEAM VIEW ============
+      // ============ TEAM VIEW ============
 
-function renderTeamView() {
-  return `
+      function renderTeamView() {
+        return `
     <div class="page-header">
       <div>
         <span class="page-eyebrow">Apparel Ops Global</span>
@@ -2077,15 +3253,17 @@ function renderTeamView() {
       ${STATE.members.map(renderTeamCard).join("")}
     </div>
   `;
-}
+      }
 
-function renderTeamCard(m) {
-  const tasks = STATE.tasks.filter(t => (t.collaborators || []).includes(m.id));
-  const doneCount = tasks.filter(t => t.status === "Done").length;
-  const hours = STATE.logs.filter(l => l.member === m.id).reduce((a, l) => a + (Number(l.hours) || 0), 0);
-  const meetingsLed = STATE.meetings.filter(mt => mt.leader === m.id).length;
+      function renderTeamCard(m) {
+        const tasks = STATE.tasks.filter((t) => (t.collaborators || []).includes(m.id));
+        const doneCount = tasks.filter((t) => t.status === "Done").length;
+        const hours = STATE.logs
+          .filter((l) => l.member === m.id)
+          .reduce((a, l) => a + (Number(l.hours) || 0), 0);
+        const meetingsLed = STATE.meetings.filter((mt) => mt.leader === m.id).length;
 
-  return `
+        return `
     <div class="team-card">
       <span class="avatar avatar-lg" style="background:${m.color}; margin:0 auto 10px; display:grid;">${m.initials}</span>
       <div class="team-card-name">${escapeHtml(m.name)}</div>
@@ -2106,191 +3284,168 @@ function renderTeamCard(m) {
       </div>
     </div>
   `;
-}
+      }
+    </script>
+    <script>
+      // ============ EXPORT / IMPORT (backup & team sharing) ============
+      // Since this is a static site with browser-local storage, export/import
+      // is how the team can move data between devices or merge updates —
+      // e.g. export from one laptop, share the .json file, teammate imports it.
 
-</script>
-<script>
-// ============ EXPORT / IMPORT (backup & team sharing) ============
-// Since this is a static site with browser-local storage, export/import
-// is how the team can move data between devices or merge updates —
-// e.g. export from one laptop, share the .json file, teammate imports it.
+      function exportData() {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          members: STATE.members,
+          phases: STATE.phases,
+          tasks: STATE.tasks,
+          meetings: STATE.meetings,
+          logs: STATE.logs,
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `aog-hub-backup-${todayISO()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Backup downloaded");
+      }
 
-function exportData() {
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    members: STATE.members,
-    phases: STATE.phases,
-    tasks: STATE.tasks,
-    meetings: STATE.meetings,
-    logs: STATE.logs,
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `aog-hub-backup-${todayISO()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast("Backup downloaded");
-}
+      function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!data.tasks || !data.members) throw new Error("Not a valid backup file");
+            if (!confirm("Import this backup? It will replace all current data in this browser."))
+              return;
+            STATE.members = data.members || STATE.members;
+            STATE.phases = data.phases || STATE.phases;
+            STATE.tasks = data.tasks || [];
+            STATE.meetings = data.meetings || [];
+            STATE.logs = data.logs || [];
+            saveState();
+            render();
+            showToast("Backup imported");
+          } catch (err) {
+            alert("Could not read that file — make sure it's a backup exported from this app.");
+          }
+        };
+        reader.readAsText(file);
+        event.target.value = "";
+      }
 
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.tasks || !data.members) throw new Error("Not a valid backup file");
-      if (!confirm("Import this backup? It will replace all current data in this browser.")) return;
-      STATE.members = data.members || STATE.members;
-      STATE.phases = data.phases || STATE.phases;
-      STATE.tasks = data.tasks || [];
-      STATE.meetings = data.meetings || [];
-      STATE.logs = data.logs || [];
-      saveState();
-      render();
-      showToast("Backup imported");
-    } catch (err) {
-      alert("Could not read that file — make sure it's a backup exported from this app.");
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = "";
-}
+      function resetToSeed() {
+        if (
+          !confirm(
+            "Reset all data back to the original launch plan? Your edits in this browser will be lost — export a backup first if you want to keep them.",
+          )
+        )
+          return;
+        STATE = {
+          members: SEED_MEMBERS,
+          phases: SEED_PHASES,
+          tasks: SEED_TASKS,
+          meetings: SEED_MEETINGS,
+          logs: SEED_LOGS,
+        };
+        saveState();
+        render();
+      }
 
-function resetToSeed() {
-  if (!confirm("Reset all data back to the original launch plan? Your edits in this browser will be lost — export a backup first if you want to keep them.")) return;
-  STATE = { members: SEED_MEMBERS, phases: SEED_PHASES, tasks: SEED_TASKS, meetings: SEED_MEETINGS, logs: SEED_LOGS };
-  saveState();
-  render();
-}
+      // ============ GLOBAL ERROR SAFETY NET ============
+      // If a render call throws (e.g. a future data edit produces something
+      // unexpected), fall back to a message instead of a blank white screen.
 
-// ============ GLOBAL ERROR SAFETY NET ============
-// If a render call throws (e.g. a future data edit produces something
-// unexpected), fall back to a message instead of a blank white screen.
-
-window.addEventListener("error", (e) => {
-  console.error("App error:", e.error);
-});
-
-// ============ INIT ============
-
-document.addEventListener("DOMContentLoaded", () => {
-  render();
-});
-
-</script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBkB3BbA4V_4F4HeWj0PXVrekZZhPd5oho",
-  authDomain: "ordinal-coder-zn50x.firebaseapp.com",
-  projectId: "ordinal-coder-zn50x",
-  storageBucket: "ordinal-coder-zn50x.firebasestorage.app",
-  messagingSenderId: "544988355219",
-  appId: "1:544988355219:web:ab9a728697aa159fa8cb66"
-};
-
-// Initialize connection status
-window.FIREBASE_STATUS = { text: "Connecting to Cloud...", color: "var(--thread)" };
-
-try {
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app, "ai-studio-teamsparknest-e698f13d-4245-4c8e-9e2e-48bd3d6d92e6");
-  const docRef = doc(db, "workspaces", "default");
-
-  // Define global push state function
-  let isWriting = false;
-  window.pushStateToFirestore = async function(state) {
-    try {
-      isWriting = true;
-      await setDoc(docRef, {
-        members: state.members || [],
-        phases: state.phases || [],
-        tasks: state.tasks || [],
-        meetings: state.meetings || [],
-        logs: state.logs || [],
-        updatedAt: new Date().toISOString()
+      window.addEventListener("error", (e) => {
+        console.error("App error:", e.error);
       });
-      setTimeout(() => { isWriting = false; }, 1200); // Debounce check
-    } catch (err) {
-      console.error("Firestore push error:", err);
-      isWriting = false;
-    }
-  };
 
-  // Get current doc to check if seeding is needed
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) {
-    console.log("Firestore workspace is empty. Seeding local real data...");
-    const localRaw = localStorage.getItem("aog_hub_v1");
-    let initialData;
-    if (localRaw) {
-      try {
-        initialData = JSON.parse(localRaw);
-      } catch (e) {}
-    }
-    // If local storage is empty, use the seed arrays defined globally
-    if (!initialData || !initialData.members || !initialData.tasks) {
-      initialData = {
-        members: SEED_MEMBERS,
-        phases: SEED_PHASES,
-        tasks: SEED_TASKS,
-        meetings: SEED_MEETINGS,
-        logs: SEED_LOGS
-      };
-    }
-    await window.pushStateToFirestore(initialData);
-  }
+      // ============ INIT ============
 
-  // Subscribe to real-time updates
-  onSnapshot(docRef, (snapshot) => {
-    if (isWriting) return; // Prevent loop on self-write if in-progress
-    const data = snapshot.data();
-    if (data) {
-      window.FIREBASE_STATUS = { text: "Connected & Live", color: "var(--spool)" };
-      
-      // Update global STATE
-      if (window.STATE) {
-        window.STATE.members = data.members || [];
-        window.STATE.phases = data.phases || [];
-        window.STATE.tasks = data.tasks || [];
-        window.STATE.meetings = data.meetings || [];
-        window.STATE.logs = data.logs || [];
-      }
-      
-      // Cache to local storage so page loads instantly next time
-      localStorage.setItem("aog_hub_v1", JSON.stringify({
-        members: data.members || [],
-        phases: data.phases || [],
-        tasks: data.tasks || [],
-        meetings: data.meetings || [],
-        logs: data.logs || []
-      }));
+      document.addEventListener("DOMContentLoaded", () => {
+        render();
+      });
+    </script>
 
-      // Render updated UI
-      if (typeof window.render === "function") {
-        window.render();
-      }
-    }
-  }, (err) => {
-    console.error("Firestore listen error:", err);
-    window.FIREBASE_STATUS = { text: "Offline / Sync error", color: "var(--alert)" };
-    if (typeof window.render === "function") window.render();
-  });
+    <script>
+      // Initialize connection status
+      window.FIREBASE_STATUS = { text: "Connecting to server...", color: "var(--thread)" };
 
-} catch (error) {
-  console.error("Firebase init error:", error);
-  window.FIREBASE_STATUS = { text: "Local storage mode", color: "var(--alert)" };
-  if (typeof window.render === "function") window.render();
-}
-</script>
+      (async function initSync() {
+        let isWriting = false;
 
-</body>
+        // Define global push state function
+        window.pushStateToFirestore = async function (state) {
+          try {
+            isWriting = true;
+            const res = await fetch("/api/state", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(state),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            window.FIREBASE_STATUS = { text: "Connected & Live (Synced)", color: "var(--spool)" };
+            if (typeof window.render === "function") window.render();
+            setTimeout(() => {
+              isWriting = false;
+            }, 1000);
+          } catch (err) {
+            console.error("Sync push error:", err);
+            window.FIREBASE_STATUS = { text: "Sync failed, retrying...", color: "var(--alert)" };
+            if (typeof window.render === "function") window.render();
+            isWriting = false;
+          }
+        };
+
+        async function pollState() {
+          if (isWriting) return;
+          try {
+            const res = await fetch("/api/state");
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            if (data.state) {
+              window.FIREBASE_STATUS = { text: "Connected & Live", color: "var(--spool)" };
+
+              // Deep check if anything changed compared to local state
+              const currentLocal = localStorage.getItem("aog_hub_v1");
+              const incomingRaw = JSON.stringify(data.state);
+
+              if (currentLocal !== incomingRaw) {
+                console.log("State updated from server, re-rendering...");
+                localStorage.setItem("aog_hub_v1", incomingRaw);
+                if (window.STATE) {
+                  window.STATE.members = data.state.members || [];
+                  window.STATE.phases = data.state.phases || [];
+                  window.STATE.tasks = data.state.tasks || [];
+                  window.STATE.meetings = data.state.meetings || [];
+                  window.STATE.logs = data.state.logs || [];
+                }
+                if (typeof window.render === "function") {
+                  window.render();
+                }
+              }
+            } else {
+              // No state in Firestore yet, seed it from our current local state!
+              console.log("No remote state found, seeding Firestore...");
+              await window.pushStateToFirestore(window.STATE);
+            }
+          } catch (err) {
+            console.error("Sync pull error:", err);
+            window.FIREBASE_STATUS = { text: "Offline / Reconnecting...", color: "var(--alert)" };
+            if (typeof window.render === "function") window.render();
+          }
+        }
+
+        // Initial pull and start polling
+        await pollState();
+        setInterval(pollState, 5000);
+      })();
+    </script>
+  </body>
 </html>
