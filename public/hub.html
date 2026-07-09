@@ -2224,7 +2224,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="data-status">
+        <div class="data-status" id="connection-status">
           <span class="dot" style="background: ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.color : "var(--spool)"}"></span>
           ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.text : "Saved to this browser"}
         </div>
@@ -3373,8 +3373,19 @@
     </script>
 
     <script>
-      // Initialize connection status
-      window.FIREBASE_STATUS = { text: "Connecting to server...", color: "var(--thread)" };
+      // Initialize connection status and update UI directly if DOM is ready
+      window.updateFirebaseStatus = function (text, color) {
+        window.FIREBASE_STATUS = { text, color };
+        const el = document.getElementById("connection-status");
+        if (el) {
+          el.innerHTML = `
+            <span class="dot" style="background: ${color}"></span>
+            ${text}
+          `;
+        }
+      };
+
+      window.updateFirebaseStatus("Connecting to server...", "var(--thread)");
 
       (async function initSync() {
         let isWriting = false;
@@ -3389,15 +3400,13 @@
               body: JSON.stringify(state),
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            window.FIREBASE_STATUS = { text: "Connected & Live (Synced)", color: "var(--spool)" };
-            if (typeof window.render === "function") window.render();
+            window.updateFirebaseStatus("Connected & Live (Synced)", "var(--spool)");
             setTimeout(() => {
               isWriting = false;
             }, 1000);
           } catch (err) {
             console.error("Sync push error:", err);
-            window.FIREBASE_STATUS = { text: "Sync failed, retrying...", color: "var(--alert)" };
-            if (typeof window.render === "function") window.render();
+            window.updateFirebaseStatus("Sync failed, retrying...", "var(--alert)");
             isWriting = false;
           }
         };
@@ -3410,7 +3419,7 @@
             const data = await res.json();
 
             if (data.state) {
-              window.FIREBASE_STATUS = { text: "Connected & Live", color: "var(--spool)" };
+              window.updateFirebaseStatus("Connected & Live", "var(--spool)");
 
               // Deep check if anything changed compared to local state
               const currentLocal = localStorage.getItem("aog_hub_v1");
@@ -3437,8 +3446,7 @@
             }
           } catch (err) {
             console.error("Sync pull error:", err);
-            window.FIREBASE_STATUS = { text: "Offline / Reconnecting...", color: "var(--alert)" };
-            if (typeof window.render === "function") window.render();
+            window.updateFirebaseStatus("Offline / Reconnecting...", "var(--alert)");
           }
         }
 
