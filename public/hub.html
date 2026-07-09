@@ -230,9 +230,23 @@ input, select, textarea { font-family: inherit; }
 
 /* ---- Main content ---- */
 .main {
-  padding: 28px 36px 60px;
+  padding: 28px 48px 60px;
   max-width: none;
   width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .main {
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .main {
+    padding-left: 80px;
+    padding-right: 80px;
+  }
 }
 
 @media (max-width: 640px) {
