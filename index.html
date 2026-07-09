@@ -986,9 +986,13 @@ function saveState() {
     logs: STATE.logs,
   }));
   showToast("Saved");
+  if (typeof window.pushStateToFirestore === "function") {
+    window.pushStateToFirestore(STATE);
+  }
 }
 
 let STATE = loadState();
+window.STATE = STATE;
 
 let UI = {
   route: "dashboard",       // dashboard | tasks | gantt | meetings | logs | team
@@ -1174,7 +1178,8 @@ function renderSidebar() {
 
       <div class="sidebar-footer">
         <div class="data-status">
-          <span class="dot"></span> Saved to this browser
+          <span class="dot" style="background: ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.color : 'var(--spool)'}"></span>
+          ${window.FIREBASE_STATUS ? window.FIREBASE_STATUS.text : 'Saved to this browser'}
         </div>
         <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
       </div>
@@ -2177,6 +2182,114 @@ document.addEventListener("DOMContentLoaded", () => {
   render();
 });
 
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkB3BbA4V_4F4HeWj0PXVrekZZhPd5oho",
+  authDomain: "ordinal-coder-zn50x.firebaseapp.com",
+  projectId: "ordinal-coder-zn50x",
+  storageBucket: "ordinal-coder-zn50x.firebasestorage.app",
+  messagingSenderId: "544988355219",
+  appId: "1:544988355219:web:ab9a728697aa159fa8cb66"
+};
+
+// Initialize connection status
+window.FIREBASE_STATUS = { text: "Connecting to Cloud...", color: "var(--thread)" };
+
+try {
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app, "ai-studio-teamsparknest-e698f13d-4245-4c8e-9e2e-48bd3d6d92e6");
+  const docRef = doc(db, "workspaces", "default");
+
+  // Define global push state function
+  let isWriting = false;
+  window.pushStateToFirestore = async function(state) {
+    try {
+      isWriting = true;
+      await setDoc(docRef, {
+        members: state.members || [],
+        phases: state.phases || [],
+        tasks: state.tasks || [],
+        meetings: state.meetings || [],
+        logs: state.logs || [],
+        updatedAt: new Date().toISOString()
+      });
+      setTimeout(() => { isWriting = false; }, 1200); // Debounce check
+    } catch (err) {
+      console.error("Firestore push error:", err);
+      isWriting = false;
+    }
+  };
+
+  // Get current doc to check if seeding is needed
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) {
+    console.log("Firestore workspace is empty. Seeding local real data...");
+    const localRaw = localStorage.getItem("aog_hub_v1");
+    let initialData;
+    if (localRaw) {
+      try {
+        initialData = JSON.parse(localRaw);
+      } catch (e) {}
+    }
+    // If local storage is empty, use the seed arrays defined globally
+    if (!initialData || !initialData.members || !initialData.tasks) {
+      initialData = {
+        members: SEED_MEMBERS,
+        phases: SEED_PHASES,
+        tasks: SEED_TASKS,
+        meetings: SEED_MEETINGS,
+        logs: SEED_LOGS
+      };
+    }
+    await window.pushStateToFirestore(initialData);
+  }
+
+  // Subscribe to real-time updates
+  onSnapshot(docRef, (snapshot) => {
+    if (isWriting) return; // Prevent loop on self-write if in-progress
+    const data = snapshot.data();
+    if (data) {
+      window.FIREBASE_STATUS = { text: "Connected & Live", color: "var(--spool)" };
+      
+      // Update global STATE
+      if (window.STATE) {
+        window.STATE.members = data.members || [];
+        window.STATE.phases = data.phases || [];
+        window.STATE.tasks = data.tasks || [];
+        window.STATE.meetings = data.meetings || [];
+        window.STATE.logs = data.logs || [];
+      }
+      
+      // Cache to local storage so page loads instantly next time
+      localStorage.setItem("aog_hub_v1", JSON.stringify({
+        members: data.members || [],
+        phases: data.phases || [],
+        tasks: data.tasks || [],
+        meetings: data.meetings || [],
+        logs: data.logs || []
+      }));
+
+      // Render updated UI
+      if (typeof window.render === "function") {
+        window.render();
+      }
+    }
+  }, (err) => {
+    console.error("Firestore listen error:", err);
+    window.FIREBASE_STATUS = { text: "Offline / Sync error", color: "var(--alert)" };
+    if (typeof window.render === "function") window.render();
+  });
+
+} catch (error) {
+  console.error("Firebase init error:", error);
+  window.FIREBASE_STATUS = { text: "Local storage mode", color: "var(--alert)" };
+  if (typeof window.render === "function") window.render();
+}
 </script>
 
 </body>
