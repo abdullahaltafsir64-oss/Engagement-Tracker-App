@@ -231,7 +231,7 @@ input, select, textarea { font-family: inherit; }
 /* ---- Main content ---- */
 .main {
   padding: 28px 36px 60px;
-  max-width: 1280px;
+  max-width: none;
   width: 100%;
 }
 
@@ -1162,8 +1162,6 @@ function renderSidebar() {
         <div class="data-status">
           <span class="dot"></span> Saved to this browser
         </div>
-        <button class="footer-btn" onclick="exportData()">${ICONS.download} Export backup (.json)</button>
-        <button class="footer-btn" onclick="document.getElementById('import-file').click()">${ICONS.upload} Import backup</button>
         <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
       </div>
     </aside>
